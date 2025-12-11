@@ -3,6 +3,14 @@ require_once '../config/database.php';
 require_once '../includes/functions.php';
 requireAdmin();
 
+// Get base path
+$base = defined('BASE_PATH') ? BASE_PATH : '/';
+$admin_base = $base . 'admin/';
+
+// Define upload directory - use absolute path
+$upload_base_dir = $_SERVER['DOCUMENT_ROOT'] . $base . 'uploads/gallery/';
+$upload_url_path = 'uploads/gallery/';
+
 // Handle delete
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
@@ -16,14 +24,16 @@ if (isset($_GET['delete'])) {
     $stmt = $pdo->prepare("DELETE FROM gallery WHERE id = ?");
     if ($stmt->execute([$id])) {
         // Delete image file if exists
-        if ($image && $image['image_url'] && file_exists('../' . $image['image_url'])) {
-            unlink('../' . $image['image_url']);
+        if ($image && $image['image_url']) {
+            $full_path = $_SERVER['DOCUMENT_ROOT'] . $base . $image['image_url'];
+            if (file_exists($full_path)) {
+                unlink($full_path);
+            }
         }
         
         logAdminActivity(getCurrentAdminId(), 'delete', 'gallery_image', $id, 'Deleted gallery image');
         setFlashMessage('success', 'Image deleted successfully');
-        header('Location: gallery.php');
-        exit;
+        redirect($admin_base . 'gallery.php');
     }
 }
 
@@ -36,6 +46,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
     $upload_count = 0;
     $error_count = 0;
     $errors = [];
+    
+    // Create directory if it doesn't exist
+    if (!file_exists($upload_base_dir)) {
+        mkdir($upload_base_dir, 0777, true);
+        chmod($upload_base_dir, 0777);
+    }
     
     // Handle multiple file uploads
     $files = $_FILES['images'];
@@ -63,17 +79,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
                 continue;
             }
             
-            $upload_dir = '../uploads/gallery/';
-            if (!file_exists($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
-            }
-            
             $extension = pathinfo($file_name, PATHINFO_EXTENSION);
             $filename = 'gallery_' . time() . '_' . $i . '_' . uniqid() . '.' . $extension;
-            $filepath = $upload_dir . $filename;
+            $filepath = $upload_base_dir . $filename;
             
             if (move_uploaded_file($file_tmp, $filepath)) {
-                $image_url = 'uploads/gallery/' . $filename;
+                chmod($filepath, 0644);
+                $image_url = $upload_url_path . $filename;
                 
                 // Save to database
                 $image_title = $title ?: pathinfo($file_name, PATHINFO_FILENAME);
@@ -97,8 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
         setFlashMessage('warning', "Upload errors: " . implode(', ', $errors));
     }
     
-    header('Location: gallery.php');
-    exit;
+    redirect($admin_base . 'gallery.php');
 }
 
 // Get gallery images
@@ -160,7 +171,7 @@ include 'includes/admin_header.php';
         <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
             <div class="card gallery-item h-100">
                 <div class="gallery-image-wrapper">
-                    <img src="../<?php echo htmlspecialchars($image['image_url']); ?>" 
+                    <img src="<?php echo $base . htmlspecialchars($image['image_url']); ?>" 
                          class="card-img-top gallery-image" 
                          alt="<?php echo htmlspecialchars($image['title']); ?>">
                     <div class="gallery-overlay">
@@ -196,7 +207,7 @@ include 'includes/admin_header.php';
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <img src="../<?php echo htmlspecialchars($image['image_url']); ?>" 
+                        <img src="<?php echo $base . htmlspecialchars($image['image_url']); ?>" 
                              class="img-fluid" 
                              alt="<?php echo htmlspecialchars($image['title']); ?>">
                         <?php if ($image['description']): ?>
@@ -208,7 +219,7 @@ include 'includes/admin_header.php';
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <a href="../<?php echo htmlspecialchars($image['image_url']); ?>" 
+                        <a href="<?php echo $base . htmlspecialchars($image['image_url']); ?>" 
                            download 
                            class="btn btn-primary">
                             <i class="bi bi-download"></i> Download
@@ -294,7 +305,6 @@ include 'includes/admin_header.php';
 .gallery-item {
     transition: all 0.3s ease;
     overflow: hidden;
-    width: 400%;
 }
 
 .gallery-item:hover {
@@ -313,7 +323,6 @@ include 'includes/admin_header.php';
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
-    
 }
 
 .gallery-item:hover .gallery-image {

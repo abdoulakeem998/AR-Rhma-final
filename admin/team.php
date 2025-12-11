@@ -3,6 +3,14 @@ require_once '../config/database.php';
 require_once '../includes/functions.php';
 requireAdmin();
 
+// Get base path
+$base = defined('BASE_PATH') ? BASE_PATH : '/';
+$admin_base = $base . 'admin/';
+
+// Define upload directory - use absolute path
+$upload_base_dir = $_SERVER['DOCUMENT_ROOT'] . $base . 'uploads/members/';
+$upload_url_path = 'uploads/members/';
+
 // Handle delete
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
@@ -16,14 +24,16 @@ if (isset($_GET['delete'])) {
     $stmt = $pdo->prepare("DELETE FROM team_members WHERE id = ?");
     if ($stmt->execute([$id])) {
         // Delete photo file if exists
-        if ($member && $member['photo_url'] && file_exists('../' . $member['photo_url'])) {
-            unlink('../' . $member['photo_url']);
+        if ($member && $member['photo_url']) {
+            $full_path = $_SERVER['DOCUMENT_ROOT'] . $base . $member['photo_url'];
+            if (file_exists($full_path)) {
+                unlink($full_path);
+            }
         }
         
         logAdminActivity(getCurrentAdminId(), 'delete', 'team_member', $id, 'Deleted team member');
         setFlashMessage('success', 'Team member deleted successfully');
-        header('Location: team.php');
-        exit;
+        redirect($admin_base . 'team.php');
     }
 }
 
@@ -54,29 +64,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_FILES['photo']['size'] > $max_size) {
             $upload_error = 'File too large. Maximum size is 3MB.';
         } else {
-            $upload_dir = '../uploads/members/';
-            if (!file_exists($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
+            // Create directory if it doesn't exist
+            if (!file_exists($upload_base_dir)) {
+                mkdir($upload_base_dir, 0777, true);
+                chmod($upload_base_dir, 0777);
             }
             
             $extension = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
             $filename = 'member_' . time() . '_' . uniqid() . '.' . $extension;
-            $filepath = $upload_dir . $filename;
+            $filepath = $upload_base_dir . $filename;
             
             if (move_uploaded_file($_FILES['photo']['tmp_name'], $filepath)) {
-                $photo_url = 'uploads/members/' . $filename;
+                chmod($filepath, 0644);
+                $photo_url = $upload_url_path . $filename;
                 
                 // Delete old photo if updating
                 if ($id > 0) {
                     $stmt = $pdo->prepare("SELECT photo_url FROM team_members WHERE id = ?");
                     $stmt->execute([$id]);
                     $old_member = $stmt->fetch();
-                    if ($old_member && $old_member['photo_url'] && file_exists('../' . $old_member['photo_url'])) {
-                        unlink('../' . $old_member['photo_url']);
+                    if ($old_member && $old_member['photo_url']) {
+                        $old_full_path = $_SERVER['DOCUMENT_ROOT'] . $base . $old_member['photo_url'];
+                        if (file_exists($old_full_path)) {
+                            unlink($old_full_path);
+                        }
                     }
                 }
             } else {
-                $upload_error = 'Failed to upload photo.';
+                $upload_error = 'Failed to upload photo. Check folder permissions.';
             }
         }
     }
@@ -97,8 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logAdminActivity(getCurrentAdminId(), 'create', 'team_member', $pdo->lastInsertId(), 'Created team member');
             setFlashMessage('success', 'Team member added successfully');
         }
-        header('Location: team.php');
-        exit;
+        redirect($admin_base . 'team.php');
     } else {
         setFlashMessage('danger', $upload_error);
     }
@@ -148,7 +162,7 @@ include 'includes/admin_header.php';
                         <div class="card-body text-center">
                             <div class="member-photo-wrapper mb-3">
                                 <?php if ($member['photo_url']): ?>
-                                <img src="../<?php echo htmlspecialchars($member['photo_url']); ?>" 
+                                <img src="<?php echo $base . htmlspecialchars($member['photo_url']); ?>" 
                                      alt="<?php echo htmlspecialchars($member['full_name']); ?>"
                                      class="member-photo">
                                 <?php else: ?>
@@ -240,7 +254,7 @@ include 'includes/admin_header.php';
                         <label class="form-label d-block">Member Photo</label>
                         <?php if ($edit_member && $edit_member['photo_url']): ?>
                         <div class="mb-2">
-                            <img src="../<?php echo htmlspecialchars($edit_member['photo_url']); ?>" 
+                            <img src="<?php echo $base . htmlspecialchars($edit_member['photo_url']); ?>" 
                                  alt="Current photo" 
                                  style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #2C5F2D;">
                             <p class="text-muted small mt-1">Current photo</p>

@@ -3,6 +3,14 @@ require_once '../config/database.php';
 require_once '../includes/functions.php';
 requireAdmin();
 
+// Get base path
+$base = defined('BASE_PATH') ? BASE_PATH : '/';
+$admin_base = $base . 'admin/';
+
+// Define upload directory - use absolute path
+$upload_base_dir = $_SERVER['DOCUMENT_ROOT'] . $base . 'uploads/activities/';
+$upload_url_path = 'uploads/activities/';
+
 // Handle delete
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
@@ -16,14 +24,16 @@ if (isset($_GET['delete'])) {
     $stmt = $pdo->prepare("DELETE FROM activities WHERE id = ?");
     if ($stmt->execute([$id])) {
         // Delete image file if exists
-        if ($activity && $activity['image_url'] && file_exists('../' . $activity['image_url'])) {
-            unlink('../' . $activity['image_url']);
+        if ($activity && $activity['image_url']) {
+            $full_path = $_SERVER['DOCUMENT_ROOT'] . $base . $activity['image_url'];
+            if (file_exists($full_path)) {
+                unlink($full_path);
+            }
         }
         
         logAdminActivity(getCurrentAdminId(), 'delete', 'activity', $id, 'Deleted activity');
         setFlashMessage('success', 'Activity deleted successfully');
-        header('Location: activities.php');
-        exit;
+        redirect($admin_base . 'activities.php');
     }
 }
 
@@ -52,29 +62,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_FILES['image']['size'] > $max_size) {
             $upload_error = 'File too large. Maximum size is 5MB.';
         } else {
-            $upload_dir = '../uploads/activities/';
-            if (!file_exists($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
+            // Create directory if it doesn't exist
+            if (!file_exists($upload_base_dir)) {
+                mkdir($upload_base_dir, 0777, true);
+                chmod($upload_base_dir, 0777);
             }
             
             $extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
             $filename = 'activity_' . time() . '_' . uniqid() . '.' . $extension;
-            $filepath = $upload_dir . $filename;
+            $filepath = $upload_base_dir . $filename;
             
             if (move_uploaded_file($_FILES['image']['tmp_name'], $filepath)) {
-                $image_url = 'uploads/activities/' . $filename;
+                chmod($filepath, 0644);
+                $image_url = $upload_url_path . $filename;
                 
                 // Delete old image if updating
                 if ($id > 0) {
                     $stmt = $pdo->prepare("SELECT image_url FROM activities WHERE id = ?");
                     $stmt->execute([$id]);
                     $old_activity = $stmt->fetch();
-                    if ($old_activity && $old_activity['image_url'] && file_exists('../' . $old_activity['image_url'])) {
-                        unlink('../' . $old_activity['image_url']);
+                    if ($old_activity && $old_activity['image_url']) {
+                        $old_full_path = $_SERVER['DOCUMENT_ROOT'] . $base . $old_activity['image_url'];
+                        if (file_exists($old_full_path)) {
+                            unlink($old_full_path);
+                        }
                     }
                 }
             } else {
-                $upload_error = 'Failed to upload image.';
+                $upload_error = 'Failed to upload image. Check folder permissions.';
             }
         }
     }
@@ -95,8 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             logAdminActivity(getCurrentAdminId(), 'create', 'activity', $pdo->lastInsertId(), 'Created activity');
             setFlashMessage('success', 'Activity created successfully');
         }
-        header('Location: activities.php');
-        exit;
+        redirect($admin_base . 'activities.php');
     } else {
         setFlashMessage('danger', $upload_error);
     }
@@ -157,7 +171,7 @@ include 'includes/admin_header.php';
                         <tr>
                             <td>
                                 <?php if ($activity['image_url']): ?>
-                                <img src="../<?php echo htmlspecialchars($activity['image_url']); ?>" 
+                                <img src="<?php echo $base . htmlspecialchars($activity['image_url']); ?>" 
                                      alt="Activity" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
                                 <?php else: ?>
                                 <div style="width: 60px; height: 60px; background: #e9ecef; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
@@ -275,7 +289,7 @@ include 'includes/admin_header.php';
                         <label class="form-label">Activity Image</label>
                         <?php if ($edit_activity && $edit_activity['image_url']): ?>
                         <div class="mb-2">
-                            <img src="../<?php echo htmlspecialchars($edit_activity['image_url']); ?>" 
+                            <img src="<?php echo $base . htmlspecialchars($edit_activity['image_url']); ?>" 
                                  alt="Current image" style="max-width: 200px; border-radius: 8px;">
                             <p class="text-muted small mt-1">Current image (upload new to replace)</p>
                         </div>
