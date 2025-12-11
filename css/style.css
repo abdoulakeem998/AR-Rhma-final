@@ -1121,6 +1121,7 @@ p {
     height: 100%;
     display: flex;
     flex-direction: column;
+    width: 400%;
 }
 
 .activity-card:hover {
