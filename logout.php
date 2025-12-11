@@ -2,6 +2,9 @@
 require_once 'config/database.php';
 require_once 'includes/functions.php';
 
+// Get base path
+$base = defined('BASE_PATH') ? BASE_PATH : '/';
+
 // Check if user is logged in
 if (isLoggedIn()) {
     // Destroy session
@@ -22,5 +25,5 @@ if (isLoggedIn()) {
     setFlashMessage('success', 'You have been successfully logged out.');
 }
 
-redirect('/ar-rahma-website/login.php');
+redirect($base . 'login.php');
 ?>

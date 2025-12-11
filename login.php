@@ -2,9 +2,12 @@
 require_once 'config/database.php';
 require_once 'includes/functions.php';
 
+// Get base path
+$base = defined('BASE_PATH') ? BASE_PATH : '/';
+
 // Redirect if already logged in
 if (isLoggedIn()) {
-    redirect('/ar-rahma-website/index.php');
+    redirect($base . 'index.php');
 }
 
 $errors = [];
@@ -28,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_email'] = $user['email'];
                 
                 // Redirect to intended page or index
-                $redirect_to = $_SESSION['redirect_after_login'] ?? '/ar-rahma-website/index.php';
+                $redirect_to = $_SESSION['redirect_after_login'] ?? ($base . 'index.php');
                 unset($_SESSION['redirect_after_login']);
                 redirect($redirect_to);
             } else {
@@ -48,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Login - AR-Rahma</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="<?php echo $base; ?>css/style.css">
 </head>
 <body>
     <?php include 'includes/header.php'; ?>
@@ -121,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="text-center auth-footer">
                                     <p class="mb-0 auth-link-text">
                                         Don't have an account? 
-                                        <a href="signup.php" class="auth-link">Sign up here</a>
+                                        <a href="<?php echo $base; ?>signup.php" class="auth-link">Sign up here</a>
                                     </p>
                                 </div>
                             </form>
@@ -146,6 +149,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php include 'includes/footer.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/main.js"></script>
+    <script src="<?php echo $base; ?>assets/js/main.js"></script>
 </body>
 </html>
