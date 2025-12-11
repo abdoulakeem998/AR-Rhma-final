@@ -1,5 +1,13 @@
 <?php
-// Database configuration
+// ============================================
+// BASE PATH CONFIGURATION
+// ============================================
+// Define the base path for your website
+define('BASE_PATH', '/~ngoila.karimou/uploads/AR-Rhma-final/');
+
+// ============================================
+// DATABASE CONFIGURATION
+// ============================================
 $server = "localhost";
 $user = "ngoila.karimou";
 $password = "Joker99@";
