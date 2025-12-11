@@ -1,9 +1,9 @@
 <?php
 // Database configuration
 $server = "localhost";
-$user = "root";
-$password = "";
-$database = "ar_rahma_db";
+$user = "ngoila.karimou";
+$password = "Joker99@";
+$database = "webtech_2025A_ngoila_karimou";
 $port = 3306;
 
 // Create connection using mysqli
