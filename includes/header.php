@@ -5,7 +5,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="/ar-rahma-website/index.php">
-                <img src="/ar-rahma-website/assets/images/logo.png" alt="AR-Rahma" style="height: 60px; width: auto;">
+                <img src="/AR-Rahma/assets/images/logo.png" alt="AR-Rahma" style="height: 60px; width: auto;">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
