@@ -1,4 +1,7 @@
 <?php
+// Get base path for links (defined in config/database.php)
+$base = defined('BASE_PATH') ? BASE_PATH : '/';
+
 $site_name = getSiteSetting('site_name', 'AR-Rahma');
 $contact_email = getSiteSetting('contact_email', 'info@ar-rahma.org');
 $contact_phone = getSiteSetting('contact_phone', '+227 XX XX XX XX');
@@ -45,22 +48,22 @@ $linkedin = getSiteSetting('linkedin_url', '');
             <div class="col-lg-2 col-md-6 footer-section mb-4">
                 <h5>Quick Links</h5>
                 <ul>
-                    <li><a href="/ar-rahma-website/index.php">Home</a></li>
-                    <li><a href="/ar-rahma-website/about.php">About Us</a></li>
-                    <li><a href="/ar-rahma-website/activities.php">Activities</a></li>
-                    <li><a href="/ar-rahma-website/team.php">Our Team</a></li>
-                    <li><a href="/ar-rahma-website/faq.php">FAQs</a></li>
+                    <li><a href="<?php echo $base; ?>index.php">Home</a></li>
+                    <li><a href="<?php echo $base; ?>about.php">About Us</a></li>
+                    <li><a href="<?php echo $base; ?>activities.php">Activities</a></li>
+                    <li><a href="<?php echo $base; ?>team.php">Our Team</a></li>
+                    <li><a href="<?php echo $base; ?>faq.php">FAQs</a></li>
                 </ul>
             </div>
             
             <div class="col-lg-3 col-md-6 footer-section mb-4">
                 <h5>Get Involved</h5>
                 <ul>
-                    <li><a href="/ar-rahma-website/donate.php">Make a Donation</a></li>
-                    <li><a href="/ar-rahma-website/volunteer.php">Volunteer</a></li>
-                    <li><a href="/ar-rahma-website/signup.php">Create Account</a></li>
-                    <li><a href="/ar-rahma-website/gallery.php">Gallery</a></li>
-                    <li><a href="/ar-rahma-website/contact.php">Contact Us</a></li>
+                    <li><a href="<?php echo $base; ?>donate.php">Make a Donation</a></li>
+                    <li><a href="<?php echo $base; ?>volunteer.php">Volunteer</a></li>
+                    <li><a href="<?php echo $base; ?>signup.php">Create Account</a></li>
+                    <li><a href="<?php echo $base; ?>gallery.php">Gallery</a></li>
+                    <li><a href="<?php echo $base; ?>contact.php">Contact Us</a></li>
                 </ul>
             </div>
             
@@ -93,8 +96,8 @@ $linkedin = getSiteSetting('linkedin_url', '');
                     <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($site_name); ?>. All rights reserved.</p>
                 </div>
                 <div class="col-md-6 text-center text-md-end">
-                    <a href="/ar-rahma-website/privacy.php">Privacy Policy</a> | 
-                    <a href="/ar-rahma-website/terms.php">Terms of Service</a>
+                    <a href="<?php echo $base; ?>privacy.php">Privacy Policy</a> | 
+                    <a href="<?php echo $base; ?>terms.php">Terms of Service</a>
                 </div>
             </div>
         </div>
