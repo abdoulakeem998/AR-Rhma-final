@@ -46,7 +46,8 @@ A COMPLETE, professional humanitarian organization website with:
 3. Start Apache and MySQL services
 
 ### STEP 2: Copy Files
-1. Copy the `ar-rahma-website` folder to:
+1. Copy the `AR-Rhma-final
+` folder to:
    - Windows: `C:\xampp\htdocs\`
    - Mac: `/Applications/XAMPP/htdocs/`
    - Linux: `/opt/lampp/htdocs/`
@@ -55,13 +56,14 @@ A COMPLETE, professional humanitarian organization website with:
 1. Open browser: `http://localhost/phpmyadmin`
 2. Click "Import" tab
 3. Click "Choose File"
-4. Select: `ar-rahma-website/config/database.sql`
+4. Select: `AR-Rhma-final
+/config/database.sql`
 5. Click "Go"
 6. Wait for success message ✅
 
 ### STEP 4: Access the Website
-**Main Website:** `http://localhost/ar-rahma-website/`
-**Admin Panel:** `http://localhost/ar-rahma-website/admin/login.php`
+**Main Website:** `http://localhost/AR-Rhma-final/`
+**Admin Panel:** `http://localhost/AR-Rhma-final/admin/login.php`
 
 **Default Admin Credentials:**
 - Username: `admin`
@@ -74,7 +76,8 @@ A COMPLETE, professional humanitarian organization website with:
 ## 📁 COMPLETE FILE STRUCTURE
 
 ```
-ar-rahma-website/
+AR-Rhma-final
+/
 ├── config/
 │   ├── database.php              [Database connection]
 │   └── database.sql              [Complete database schema]
@@ -164,7 +167,8 @@ ar-rahma-website/
 
 ### 1. Login to Admin Panel
 ```
-URL: http://localhost/ar-rahma-website/admin/login.php
+URL: http://localhost/AR-Rhma-final
+/admin/login.php
 Username: admin
 Password: admin123
 ```

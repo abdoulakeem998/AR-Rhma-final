@@ -3,38 +3,52 @@ require_once '../config/database.php';
 require_once '../includes/functions.php';
 requireAdmin();
 
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 // Get base path
 $base = defined('BASE_PATH') ? BASE_PATH : '/';
 $admin_base = $base . 'admin/';
 
-// Define upload directory - use absolute path
-$upload_base_dir = $_SERVER['DOCUMENT_ROOT'] . $base . 'uploads/members/';
-$upload_url_path = 'uploads/members/';
+// FIXED: More reliable upload directory setup
+$upload_base_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/members/';
+$upload_url_path = '/uploads/members/';
+
+// Create directory if it doesn't exist
+if (!file_exists($upload_base_dir)) {
+    mkdir($upload_base_dir, 0777, true);
+    chmod($upload_base_dir, 0777);
+}
 
 // Handle delete
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     
-    // Get photo path before deleting
-    $stmt = $pdo->prepare("SELECT photo_url FROM team_members WHERE id = ?");
-    $stmt->execute([$id]);
-    $member = $stmt->fetch();
-    
-    // Delete from database
-    $stmt = $pdo->prepare("DELETE FROM team_members WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        // Delete photo file if exists
-        if ($member && $member['photo_url']) {
-            $full_path = $_SERVER['DOCUMENT_ROOT'] . $base . $member['photo_url'];
-            if (file_exists($full_path)) {
-                unlink($full_path);
-            }
-        }
+    try {
+        // Get photo path before deleting
+        $stmt = $pdo->prepare("SELECT photo_url FROM team_members WHERE id = ?");
+        $stmt->execute([$id]);
+        $member = $stmt->fetch();
         
-        logAdminActivity(getCurrentAdminId(), 'delete', 'team_member', $id, 'Deleted team member');
-        setFlashMessage('success', 'Team member deleted successfully');
-        redirect($admin_base . 'team.php');
+        // Delete from database
+        $stmt = $pdo->prepare("DELETE FROM team_members WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            // Delete photo file if exists
+            if ($member && $member['photo_url']) {
+                $full_path = $_SERVER['DOCUMENT_ROOT'] . $member['photo_url'];
+                if (file_exists($full_path)) {
+                    unlink($full_path);
+                }
+            }
+            
+            logAdminActivity(getCurrentAdminId(), 'delete', 'team_member', $id, 'Deleted team member');
+            setFlashMessage('success', 'Team member deleted successfully');
+        }
+    } catch (Exception $e) {
+        setFlashMessage('danger', 'Error deleting member: ' . $e->getMessage());
     }
+    redirect($admin_base . 'team.php');
 }
 
 // Handle create/update
@@ -54,65 +68,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $photo_url = '';
     $upload_error = '';
     
-    // Handle photo upload
-    if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-        $allowed_types = ['image/jpeg', 'image/jpg', 'image/png'];
-        $max_size = 3 * 1024 * 1024; // 3MB
+    // IMPROVED: Better photo upload handling
+    if (isset($_FILES['photo']) && $_FILES['photo']['error'] !== UPLOAD_ERR_NO_FILE) {
         
-        if (!in_array($_FILES['photo']['type'], $allowed_types)) {
-            $upload_error = 'Invalid file type. Only JPG and PNG are allowed.';
-        } elseif ($_FILES['photo']['size'] > $max_size) {
-            $upload_error = 'File too large. Maximum size is 3MB.';
+        // Check for upload errors first
+        if ($_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
+            $upload_errors = [
+                UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize in php.ini',
+                UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE in form',
+                UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+                UPLOAD_ERR_EXTENSION => 'PHP extension stopped the upload'
+            ];
+            $upload_error = $upload_errors[$_FILES['photo']['error']] ?? 'Unknown upload error';
         } else {
-            // Create directory if it doesn't exist
-            if (!file_exists($upload_base_dir)) {
-                mkdir($upload_base_dir, 0777, true);
-                chmod($upload_base_dir, 0777);
-            }
+            // Validate file
+            $file_info = [
+                'name' => $_FILES['photo']['name'],
+                'type' => $_FILES['photo']['type'],
+                'tmp_name' => $_FILES['photo']['tmp_name'],
+                'size' => $_FILES['photo']['size']
+            ];
             
-            $extension = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
-            $filename = 'member_' . time() . '_' . uniqid() . '.' . $extension;
-            $filepath = $upload_base_dir . $filename;
+            // Get actual mime type
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $actual_mime = finfo_file($finfo, $file_info['tmp_name']);
+            finfo_close($finfo);
             
-            if (move_uploaded_file($_FILES['photo']['tmp_name'], $filepath)) {
-                chmod($filepath, 0644);
-                $photo_url = $upload_url_path . $filename;
+            $allowed_types = ['image/jpeg', 'image/jpg', 'image/png'];
+            $max_size = 3 * 1024 * 1024; // 3MB
+            
+            if (!in_array($actual_mime, $allowed_types)) {
+                $upload_error = 'Invalid file type. Only JPG and PNG are allowed. Detected type: ' . $actual_mime;
+            } elseif ($file_info['size'] > $max_size) {
+                $upload_error = 'File too large. Maximum size is 3MB. Your file: ' . round($file_info['size'] / 1024 / 1024, 2) . 'MB';
+            } elseif ($file_info['size'] == 0) {
+                $upload_error = 'File is empty (0 bytes)';
+            } else {
+                // Create unique filename
+                $extension = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
+                $filename = 'member_' . time() . '_' . uniqid() . '.' . $extension;
+                $filepath = $upload_base_dir . $filename;
                 
-                // Delete old photo if updating
-                if ($id > 0) {
-                    $stmt = $pdo->prepare("SELECT photo_url FROM team_members WHERE id = ?");
-                    $stmt->execute([$id]);
-                    $old_member = $stmt->fetch();
-                    if ($old_member && $old_member['photo_url']) {
-                        $old_full_path = $_SERVER['DOCUMENT_ROOT'] . $base . $old_member['photo_url'];
-                        if (file_exists($old_full_path)) {
-                            unlink($old_full_path);
+                // Debug info
+                error_log("Attempting upload:");
+                error_log("  Source: " . $file_info['tmp_name']);
+                error_log("  Destination: " . $filepath);
+                error_log("  Directory exists: " . (file_exists($upload_base_dir) ? 'Yes' : 'No'));
+                error_log("  Directory writable: " . (is_writable($upload_base_dir) ? 'Yes' : 'No'));
+                
+                // Attempt upload
+                if (move_uploaded_file($file_info['tmp_name'], $filepath)) {
+                    chmod($filepath, 0644);
+                    $photo_url = $upload_url_path . $filename;
+                    
+                    // Delete old photo if updating
+                    if ($id > 0) {
+                        $stmt = $pdo->prepare("SELECT photo_url FROM team_members WHERE id = ?");
+                        $stmt->execute([$id]);
+                        $old_member = $stmt->fetch();
+                        if ($old_member && $old_member['photo_url']) {
+                            $old_full_path = $_SERVER['DOCUMENT_ROOT'] . $old_member['photo_url'];
+                            if (file_exists($old_full_path)) {
+                                unlink($old_full_path);
+                            }
                         }
                     }
+                } else {
+                    $upload_error = 'Failed to move uploaded file. Check folder permissions. Path: ' . $filepath;
+                    error_log("Upload failed: " . $upload_error);
                 }
-            } else {
-                $upload_error = 'Failed to upload photo. Check folder permissions.';
             }
         }
     }
     
     if (empty($upload_error)) {
-        if ($id > 0) {
-            // Update
-            $sql = "UPDATE team_members SET full_name=?, position=?, bio=?, email=?, phone=?, facebook=?, twitter=?, linkedin=?, display_order=?, status=?" . ($photo_url ? ", photo_url=?" : "") . " WHERE id=?";
-            $params = $photo_url ? [$full_name, $position, $bio, $email, $phone, $facebook, $twitter, $linkedin, $display_order, $status, $photo_url, $id] : [$full_name, $position, $bio, $email, $phone, $facebook, $twitter, $linkedin, $display_order, $status, $id];
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            logAdminActivity(getCurrentAdminId(), 'update', 'team_member', $id, 'Updated team member');
-            setFlashMessage('success', 'Team member updated successfully');
-        } else {
-            // Create
-            $stmt = $pdo->prepare("INSERT INTO team_members (full_name, position, bio, email, phone, photo_url, facebook, twitter, linkedin, display_order, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$full_name, $position, $bio, $email, $phone, $photo_url, $facebook, $twitter, $linkedin, $display_order, $status]);
-            logAdminActivity(getCurrentAdminId(), 'create', 'team_member', $pdo->lastInsertId(), 'Created team member');
-            setFlashMessage('success', 'Team member added successfully');
+        try {
+            if ($id > 0) {
+                // Update
+                $sql = "UPDATE team_members SET full_name=?, position=?, bio=?, email=?, phone=?, facebook=?, twitter=?, linkedin=?, display_order=?, status=?" . ($photo_url ? ", photo_url=?" : "") . " WHERE id=?";
+                $params = $photo_url ? [$full_name, $position, $bio, $email, $phone, $facebook, $twitter, $linkedin, $display_order, $status, $photo_url, $id] : [$full_name, $position, $bio, $email, $phone, $facebook, $twitter, $linkedin, $display_order, $status, $id];
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                logAdminActivity(getCurrentAdminId(), 'update', 'team_member', $id, 'Updated team member');
+                setFlashMessage('success', 'Team member updated successfully');
+            } else {
+                // Create
+                $stmt = $pdo->prepare("INSERT INTO team_members (full_name, position, bio, email, phone, photo_url, facebook, twitter, linkedin, display_order, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$full_name, $position, $bio, $email, $phone, $photo_url, $facebook, $twitter, $linkedin, $display_order, $status]);
+                logAdminActivity(getCurrentAdminId(), 'create', 'team_member', $pdo->lastInsertId(), 'Created team member');
+                setFlashMessage('success', 'Team member added successfully' . ($photo_url ? ' with photo' : ''));
+            }
+            redirect($admin_base . 'team.php');
+        } catch (Exception $e) {
+            setFlashMessage('danger', 'Database error: ' . $e->getMessage());
         }
-        redirect($admin_base . 'team.php');
     } else {
         setFlashMessage('danger', $upload_error);
     }
@@ -132,6 +183,18 @@ $members = $stmt->fetchAll();
 
 include 'includes/admin_header.php';
 ?>
+
+<!-- Display upload directory info for debugging -->
+<?php if (isset($_GET['debug'])): ?>
+<div class="alert alert-info">
+    <strong>Debug Info:</strong><br>
+    Upload Directory: <?php echo $upload_base_dir; ?><br>
+    Directory Exists: <?php echo file_exists($upload_base_dir) ? 'Yes' : 'No'; ?><br>
+    Directory Writable: <?php echo is_writable($upload_base_dir) ? 'Yes' : 'No'; ?><br>
+    PHP upload_max_filesize: <?php echo ini_get('upload_max_filesize'); ?><br>
+    PHP post_max_size: <?php echo ini_get('post_max_size'); ?>
+</div>
+<?php endif; ?>
 
 <div class="admin-content">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -162,7 +225,7 @@ include 'includes/admin_header.php';
                         <div class="card-body text-center">
                             <div class="member-photo-wrapper mb-3">
                                 <?php if ($member['photo_url']): ?>
-                                <img src="<?php echo $base . htmlspecialchars($member['photo_url']); ?>" 
+                                <img src="<?php echo htmlspecialchars($member['photo_url']); ?>" 
                                      alt="<?php echo htmlspecialchars($member['full_name']); ?>"
                                      class="member-photo">
                                 <?php else: ?>
@@ -254,7 +317,7 @@ include 'includes/admin_header.php';
                         <label class="form-label d-block">Member Photo</label>
                         <?php if ($edit_member && $edit_member['photo_url']): ?>
                         <div class="mb-2">
-                            <img src="<?php echo $base . htmlspecialchars($edit_member['photo_url']); ?>" 
+                            <img src="<?php echo htmlspecialchars($edit_member['photo_url']); ?>" 
                                  alt="Current photo" 
                                  style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #2C5F2D;">
                             <p class="text-muted small mt-1">Current photo</p>
@@ -265,6 +328,7 @@ include 'includes/admin_header.php';
                         <div id="photoPreview" class="mt-2" style="display: none;">
                             <img src="" alt="Preview" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #2C5F2D;">
                         </div>
+                        <div id="uploadInfo" class="mt-2 small text-muted"></div>
                     </div>
                     
                     <div class="row">
@@ -338,7 +402,7 @@ include 'includes/admin_header.php';
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="bi bi-x-circle"></i> Cancel
                     </button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
                         <i class="bi bi-check-circle"></i> Save Member
                     </button>
                 </div>
@@ -397,18 +461,43 @@ include 'includes/admin_header.php';
 </style>
 
 <script>
-// Photo preview
+// Enhanced photo preview with file info
 document.getElementById('photoInput')?.addEventListener('change', function(e) {
     const file = e.target.files[0];
+    const preview = document.getElementById('photoPreview');
+    const info = document.getElementById('uploadInfo');
+    
     if (file) {
+        // Display file info
+        const sizeInMB = (file.size / 1024 / 1024).toFixed(2);
+        info.innerHTML = `<strong>File:</strong> ${file.name}<br><strong>Size:</strong> ${sizeInMB} MB<br><strong>Type:</strong> ${file.type}`;
+        
+        // Check file size
+        if (file.size > 3 * 1024 * 1024) {
+            info.innerHTML += '<br><span class="text-danger">⚠️ File is too large! Max 3MB</span>';
+            e.target.value = '';
+            preview.style.display = 'none';
+            return;
+        }
+        
+        // Show preview
         const reader = new FileReader();
         reader.onload = function(e) {
-            const preview = document.getElementById('photoPreview');
             preview.querySelector('img').src = e.target.result;
             preview.style.display = 'block';
         }
         reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+        info.innerHTML = '';
     }
+});
+
+// Prevent double submission
+document.getElementById('teamForm')?.addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
 });
 
 // Auto-open modal if editing

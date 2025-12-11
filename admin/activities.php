@@ -3,38 +3,52 @@ require_once '../config/database.php';
 require_once '../includes/functions.php';
 requireAdmin();
 
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 // Get base path
 $base = defined('BASE_PATH') ? BASE_PATH : '/';
 $admin_base = $base . 'admin/';
 
-// Define upload directory - use absolute path
-$upload_base_dir = $_SERVER['DOCUMENT_ROOT'] . $base . 'uploads/activities/';
-$upload_url_path = 'uploads/activities/';
+// FIXED: More reliable upload directory setup
+$upload_base_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/activities/';
+$upload_url_path = '/uploads/activities/';
+
+// Create directory if it doesn't exist
+if (!file_exists($upload_base_dir)) {
+    mkdir($upload_base_dir, 0777, true);
+    chmod($upload_base_dir, 0777);
+}
 
 // Handle delete
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     
-    // Get image path before deleting
-    $stmt = $pdo->prepare("SELECT image_url FROM activities WHERE id = ?");
-    $stmt->execute([$id]);
-    $activity = $stmt->fetch();
-    
-    // Delete from database
-    $stmt = $pdo->prepare("DELETE FROM activities WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        // Delete image file if exists
-        if ($activity && $activity['image_url']) {
-            $full_path = $_SERVER['DOCUMENT_ROOT'] . $base . $activity['image_url'];
-            if (file_exists($full_path)) {
-                unlink($full_path);
-            }
-        }
+    try {
+        // Get image path before deleting
+        $stmt = $pdo->prepare("SELECT image_url FROM activities WHERE id = ?");
+        $stmt->execute([$id]);
+        $activity = $stmt->fetch();
         
-        logAdminActivity(getCurrentAdminId(), 'delete', 'activity', $id, 'Deleted activity');
-        setFlashMessage('success', 'Activity deleted successfully');
-        redirect($admin_base . 'activities.php');
+        // Delete from database
+        $stmt = $pdo->prepare("DELETE FROM activities WHERE id = ?");
+        if ($stmt->execute([$id])) {
+            // Delete image file if exists
+            if ($activity && $activity['image_url']) {
+                $full_path = $_SERVER['DOCUMENT_ROOT'] . $activity['image_url'];
+                if (file_exists($full_path)) {
+                    unlink($full_path);
+                }
+            }
+            
+            logAdminActivity(getCurrentAdminId(), 'delete', 'activity', $id, 'Deleted activity');
+            setFlashMessage('success', 'Activity deleted successfully');
+        }
+    } catch (Exception $e) {
+        setFlashMessage('danger', 'Error deleting activity: ' . $e->getMessage());
     }
+    redirect($admin_base . 'activities.php');
 }
 
 // Handle create/update
@@ -52,65 +66,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $image_url = '';
     $upload_error = '';
     
-    // Handle image upload
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-        $max_size = 5 * 1024 * 1024; // 5MB
+    // IMPROVED: Better image upload handling
+    if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         
-        if (!in_array($_FILES['image']['type'], $allowed_types)) {
-            $upload_error = 'Invalid file type. Only JPG, PNG, and GIF are allowed.';
-        } elseif ($_FILES['image']['size'] > $max_size) {
-            $upload_error = 'File too large. Maximum size is 5MB.';
+        // Check for upload errors first
+        if ($_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+            $upload_errors = [
+                UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize in php.ini',
+                UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE in form',
+                UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+                UPLOAD_ERR_EXTENSION => 'PHP extension stopped the upload'
+            ];
+            $upload_error = $upload_errors[$_FILES['image']['error']] ?? 'Unknown upload error';
         } else {
-            // Create directory if it doesn't exist
-            if (!file_exists($upload_base_dir)) {
-                mkdir($upload_base_dir, 0777, true);
-                chmod($upload_base_dir, 0777);
-            }
+            // Validate file
+            $file_info = [
+                'name' => $_FILES['image']['name'],
+                'type' => $_FILES['image']['type'],
+                'tmp_name' => $_FILES['image']['tmp_name'],
+                'size' => $_FILES['image']['size']
+            ];
             
-            $extension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-            $filename = 'activity_' . time() . '_' . uniqid() . '.' . $extension;
-            $filepath = $upload_base_dir . $filename;
+            // Get actual mime type
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $actual_mime = finfo_file($finfo, $file_info['tmp_name']);
+            finfo_close($finfo);
             
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $filepath)) {
-                chmod($filepath, 0644);
-                $image_url = $upload_url_path . $filename;
+            $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            $max_size = 5 * 1024 * 1024; // 5MB
+            
+            if (!in_array($actual_mime, $allowed_types)) {
+                $upload_error = 'Invalid file type. Only JPG, PNG, and GIF are allowed. Detected type: ' . $actual_mime;
+            } elseif ($file_info['size'] > $max_size) {
+                $upload_error = 'File too large. Maximum size is 5MB. Your file: ' . round($file_info['size'] / 1024 / 1024, 2) . 'MB';
+            } elseif ($file_info['size'] == 0) {
+                $upload_error = 'File is empty (0 bytes)';
+            } else {
+                // Create unique filename
+                $extension = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
+                $filename = 'activity_' . time() . '_' . uniqid() . '.' . $extension;
+                $filepath = $upload_base_dir . $filename;
                 
-                // Delete old image if updating
-                if ($id > 0) {
-                    $stmt = $pdo->prepare("SELECT image_url FROM activities WHERE id = ?");
-                    $stmt->execute([$id]);
-                    $old_activity = $stmt->fetch();
-                    if ($old_activity && $old_activity['image_url']) {
-                        $old_full_path = $_SERVER['DOCUMENT_ROOT'] . $base . $old_activity['image_url'];
-                        if (file_exists($old_full_path)) {
-                            unlink($old_full_path);
+                // Debug info
+                error_log("Attempting upload:");
+                error_log("  Source: " . $file_info['tmp_name']);
+                error_log("  Destination: " . $filepath);
+                error_log("  Directory exists: " . (file_exists($upload_base_dir) ? 'Yes' : 'No'));
+                error_log("  Directory writable: " . (is_writable($upload_base_dir) ? 'Yes' : 'No'));
+                
+                // Attempt upload
+                if (move_uploaded_file($file_info['tmp_name'], $filepath)) {
+                    chmod($filepath, 0644);
+                    $image_url = $upload_url_path . $filename;
+                    
+                    // Delete old image if updating
+                    if ($id > 0) {
+                        $stmt = $pdo->prepare("SELECT image_url FROM activities WHERE id = ?");
+                        $stmt->execute([$id]);
+                        $old_activity = $stmt->fetch();
+                        if ($old_activity && $old_activity['image_url']) {
+                            $old_full_path = $_SERVER['DOCUMENT_ROOT'] . $old_activity['image_url'];
+                            if (file_exists($old_full_path)) {
+                                unlink($old_full_path);
+                            }
                         }
                     }
+                } else {
+                    $upload_error = 'Failed to move uploaded file. Check folder permissions. Path: ' . $filepath;
+                    error_log("Upload failed: " . $upload_error);
                 }
-            } else {
-                $upload_error = 'Failed to upload image. Check folder permissions.';
             }
         }
     }
     
     if (empty($upload_error)) {
-        if ($id > 0) {
-            // Update
-            $sql = "UPDATE activities SET title=?, description=?, activity_date=?, location=?, beneficiaries=?, category=?, status=?, featured=?" . ($image_url ? ", image_url=?" : "") . " WHERE id=?";
-            $params = $image_url ? [$title, $description, $date, $location, $beneficiaries, $category, $status, $featured, $image_url, $id] : [$title, $description, $date, $location, $beneficiaries, $category, $status, $featured, $id];
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            logAdminActivity(getCurrentAdminId(), 'update', 'activity', $id, 'Updated activity');
-            setFlashMessage('success', 'Activity updated successfully');
-        } else {
-            // Create
-            $stmt = $pdo->prepare("INSERT INTO activities (title, description, activity_date, location, beneficiaries, image_url, category, status, featured, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$title, $description, $date, $location, $beneficiaries, $image_url, $category, $status, $featured, getCurrentAdminId()]);
-            logAdminActivity(getCurrentAdminId(), 'create', 'activity', $pdo->lastInsertId(), 'Created activity');
-            setFlashMessage('success', 'Activity created successfully');
+        try {
+            if ($id > 0) {
+                // Update
+                $sql = "UPDATE activities SET title=?, description=?, activity_date=?, location=?, beneficiaries=?, category=?, status=?, featured=?" . ($image_url ? ", image_url=?" : "") . " WHERE id=?";
+                $params = $image_url ? [$title, $description, $date, $location, $beneficiaries, $category, $status, $featured, $image_url, $id] : [$title, $description, $date, $location, $beneficiaries, $category, $status, $featured, $id];
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                logAdminActivity(getCurrentAdminId(), 'update', 'activity', $id, 'Updated activity');
+                setFlashMessage('success', 'Activity updated successfully');
+            } else {
+                // Create
+                $stmt = $pdo->prepare("INSERT INTO activities (title, description, activity_date, location, beneficiaries, image_url, category, status, featured, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$title, $description, $date, $location, $beneficiaries, $image_url, $category, $status, $featured, getCurrentAdminId()]);
+                logAdminActivity(getCurrentAdminId(), 'create', 'activity', $pdo->lastInsertId(), 'Created activity');
+                setFlashMessage('success', 'Activity created successfully' . ($image_url ? ' with image' : ''));
+            }
+            redirect($admin_base . 'activities.php');
+        } catch (Exception $e) {
+            setFlashMessage('danger', 'Database error: ' . $e->getMessage());
         }
-        redirect($admin_base . 'activities.php');
     } else {
         setFlashMessage('danger', $upload_error);
     }
@@ -130,6 +181,18 @@ $activities = $stmt->fetchAll();
 
 include 'includes/admin_header.php';
 ?>
+
+<!-- Display upload directory info for debugging -->
+<?php if (isset($_GET['debug'])): ?>
+<div class="alert alert-info">
+    <strong>Debug Info:</strong><br>
+    Upload Directory: <?php echo $upload_base_dir; ?><br>
+    Directory Exists: <?php echo file_exists($upload_base_dir) ? 'Yes' : 'No'; ?><br>
+    Directory Writable: <?php echo is_writable($upload_base_dir) ? 'Yes' : 'No'; ?><br>
+    PHP upload_max_filesize: <?php echo ini_get('upload_max_filesize'); ?><br>
+    PHP post_max_size: <?php echo ini_get('post_max_size'); ?>
+</div>
+<?php endif; ?>
 
 <div class="admin-content">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -171,7 +234,7 @@ include 'includes/admin_header.php';
                         <tr>
                             <td>
                                 <?php if ($activity['image_url']): ?>
-                                <img src="<?php echo $base . htmlspecialchars($activity['image_url']); ?>" 
+                                <img src="<?php echo htmlspecialchars($activity['image_url']); ?>" 
                                      alt="Activity" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
                                 <?php else: ?>
                                 <div style="width: 60px; height: 60px; background: #e9ecef; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
@@ -289,7 +352,7 @@ include 'includes/admin_header.php';
                         <label class="form-label">Activity Image</label>
                         <?php if ($edit_activity && $edit_activity['image_url']): ?>
                         <div class="mb-2">
-                            <img src="<?php echo $base . htmlspecialchars($edit_activity['image_url']); ?>" 
+                            <img src="<?php echo htmlspecialchars($edit_activity['image_url']); ?>" 
                                  alt="Current image" style="max-width: 200px; border-radius: 8px;">
                             <p class="text-muted small mt-1">Current image (upload new to replace)</p>
                         </div>
@@ -299,6 +362,7 @@ include 'includes/admin_header.php';
                         <div id="imagePreview" class="mt-2" style="display: none;">
                             <img src="" alt="Preview" style="max-width: 200px; border-radius: 8px;">
                         </div>
+                        <div id="uploadInfo" class="mt-2 small text-muted"></div>
                     </div>
                     
                     <div class="form-check">
@@ -313,7 +377,7 @@ include 'includes/admin_header.php';
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="bi bi-x-circle"></i> Cancel
                     </button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
                         <i class="bi bi-check-circle"></i> Save Activity
                     </button>
                 </div>
@@ -323,18 +387,43 @@ include 'includes/admin_header.php';
 </div>
 
 <script>
-// Image preview
+// Enhanced image preview with file info
 document.getElementById('imageInput')?.addEventListener('change', function(e) {
     const file = e.target.files[0];
+    const preview = document.getElementById('imagePreview');
+    const info = document.getElementById('uploadInfo');
+    
     if (file) {
+        // Display file info
+        const sizeInMB = (file.size / 1024 / 1024).toFixed(2);
+        info.innerHTML = `<strong>File:</strong> ${file.name}<br><strong>Size:</strong> ${sizeInMB} MB<br><strong>Type:</strong> ${file.type}`;
+        
+        // Check file size
+        if (file.size > 5 * 1024 * 1024) {
+            info.innerHTML += '<br><span class="text-danger">⚠️ File is too large! Max 5MB</span>';
+            e.target.value = '';
+            preview.style.display = 'none';
+            return;
+        }
+        
+        // Show preview
         const reader = new FileReader();
         reader.onload = function(e) {
-            const preview = document.getElementById('imagePreview');
             preview.querySelector('img').src = e.target.result;
             preview.style.display = 'block';
         }
         reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+        info.innerHTML = '';
     }
+});
+
+// Prevent double submission
+document.getElementById('activityForm')?.addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
 });
 
 // Auto-open modal if editing
