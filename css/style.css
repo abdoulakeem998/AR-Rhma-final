@@ -2011,7 +2011,7 @@ textarea.form-control {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: var(--spacing-md);
-}
+} 
 
 .gallery-item {
     position: relative;

@@ -32,7 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("INSERT INTO applications (user_id, role_id, cover_letter, availability, status) VALUES (?, ?, ?, ?, 'pending')");
             if ($stmt->execute([getCurrentUserId(), $role_id, $cover_letter, $availability])) {
                 setFlashMessage('success', 'Application submitted successfully!');
-                redirect('/ar-rahma-website/my_applications.php');
+                
+                // FIXED: Use proper redirect with exit
+                header('Location: /ar-rahma-website/my_applications.php');
+                exit(); // This ensures nothing else is executed after redirect
             }
         } catch (PDOException $e) {
             $errors[] = 'Failed to submit application.';
@@ -62,12 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <form method="POST">
                         <div class="mb-3">
                             <label class="form-label">Cover Letter *</label>
-                            <textarea name="cover_letter" class="form-control" rows="8" required><?php echo $_POST['cover_letter'] ?? ''; ?></textarea>
+                            <textarea name="cover_letter" class="form-control" rows="8" required><?php echo htmlspecialchars($_POST['cover_letter'] ?? ''); ?></textarea>
                             <small class="text-muted">Tell us why you're interested and what you can bring to this role.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Your Availability</label>
-                            <textarea name="availability" class="form-control" rows="3"><?php echo $_POST['availability'] ?? ''; ?></textarea>
+                            <textarea name="availability" class="form-control" rows="3"><?php echo htmlspecialchars($_POST['availability'] ?? ''); ?></textarea>
                             <small class="text-muted">When are you available to start and how many hours per week?</small>
                         </div>
                         <button type="submit" class="btn btn-primary">
