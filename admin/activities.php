@@ -11,14 +11,26 @@ error_reporting(E_ALL);
 $base = defined('BASE_PATH') ? BASE_PATH : '/';
 $admin_base = $base . 'admin/';
 
-// FIXED: More reliable upload directory setup
-$upload_base_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/activities/';
-$upload_url_path = '/uploads/activities/';
+// FIXED: Use relative path from current script location (hosting-specific fix)
+$current_dir = dirname(dirname(__FILE__)); // Goes up one level from admin/
+$upload_base_dir = $current_dir . '/uploads/activities/';
+$upload_url_path = '/uploads/AR-Rhma-final/uploads/activities/';
+
+// Debug info (you can remove this after it works)
+error_log("Current directory: " . $current_dir);
+error_log("Upload directory: " . $upload_base_dir);
 
 // Create directory if it doesn't exist
 if (!file_exists($upload_base_dir)) {
-    mkdir($upload_base_dir, 0777, true);
-    chmod($upload_base_dir, 0777);
+    // Try to create it
+    if (@mkdir($upload_base_dir, 0755, true)) {
+        @chmod($upload_base_dir, 0755);
+        error_log("Successfully created directory: " . $upload_base_dir);
+    } else {
+        error_log("Failed to create directory: " . $upload_base_dir);
+        // Set a flag to show error to user
+        $dir_error = true;
+    }
 }
 
 // Handle delete
@@ -119,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Attempt upload
                 if (move_uploaded_file($file_info['tmp_name'], $filepath)) {
                     chmod($filepath, 0644);
-                    $image_url = $upload_url_path . $filename;
+                    $image_url = '/uploads/AR-Rhma-final/uploads/activities/' . $filename;
                     
                     // Delete old image if updating
                     if ($id > 0) {
@@ -181,6 +193,21 @@ $activities = $stmt->fetchAll();
 
 include 'includes/admin_header.php';
 ?>
+
+<!-- Display upload directory error if creation failed -->
+<?php if (isset($dir_error)): ?>
+<div class="alert alert-danger">
+    <strong>⚠️ Upload Directory Error!</strong><br>
+    The uploads directory cannot be created automatically. Please create it manually:<br>
+    <code><?php echo $upload_base_dir; ?></code><br><br>
+    <strong>Steps:</strong><br>
+    1. Use your hosting File Manager<br>
+    2. Navigate to: <code><?php echo $current_dir; ?></code><br>
+    3. Create folder: <code>uploads</code><br>
+    4. Inside uploads, create folder: <code>activities</code><br>
+    5. Set permissions to 755
+</div>
+<?php endif; ?>
 
 <!-- Display upload directory info for debugging -->
 <?php if (isset($_GET['debug'])): ?>

@@ -11,14 +11,26 @@ error_reporting(E_ALL);
 $base = defined('BASE_PATH') ? BASE_PATH : '/';
 $admin_base = $base . 'admin/';
 
-// FIXED: More reliable upload directory setup
-$upload_base_dir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/members/';
-$upload_url_path = '/uploads/members/';
+// FIXED: Use relative path from current script location
+$current_dir = dirname(dirname(__FILE__)); // Goes up one level from admin/
+$upload_base_dir = $current_dir . '/uploads/members/';
+$upload_url_path = '/uploads/AR-Rhma-final/uploads/members/';
+
+// Debug info (you can remove this after it works)
+error_log("Current directory: " . $current_dir);
+error_log("Upload directory: " . $upload_base_dir);
 
 // Create directory if it doesn't exist
 if (!file_exists($upload_base_dir)) {
-    mkdir($upload_base_dir, 0777, true);
-    chmod($upload_base_dir, 0777);
+    // Try to create it
+    if (@mkdir($upload_base_dir, 0755, true)) {
+        @chmod($upload_base_dir, 0755);
+        error_log("Successfully created directory: " . $upload_base_dir);
+    } else {
+        error_log("Failed to create directory: " . $upload_base_dir);
+        // Set a flag to show error to user
+        $dir_error = true;
+    }
 }
 
 // Handle delete
@@ -36,7 +48,7 @@ if (isset($_GET['delete'])) {
         if ($stmt->execute([$id])) {
             // Delete photo file if exists
             if ($member && $member['photo_url']) {
-                $full_path = $_SERVER['DOCUMENT_ROOT'] . $member['photo_url'];
+                $full_path = $current_dir . $member['photo_url'];
                 if (file_exists($full_path)) {
                     unlink($full_path);
                 }
@@ -68,8 +80,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $photo_url = '';
     $upload_error = '';
     
+    // Check if upload directory exists and is writable
+    if (!file_exists($upload_base_dir)) {
+        $upload_error = 'Upload directory does not exist. Please create it manually: ' . $upload_base_dir;
+    } elseif (!is_writable($upload_base_dir)) {
+        $upload_error = 'Upload directory is not writable. Please set permissions to 755 or 777: ' . $upload_base_dir;
+    }
+    
     // IMPROVED: Better photo upload handling
-    if (isset($_FILES['photo']) && $_FILES['photo']['error'] !== UPLOAD_ERR_NO_FILE) {
+    if (empty($upload_error) && isset($_FILES['photo']) && $_FILES['photo']['error'] !== UPLOAD_ERR_NO_FILE) {
         
         // Check for upload errors first
         if ($_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
@@ -120,8 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Attempt upload
                 if (move_uploaded_file($file_info['tmp_name'], $filepath)) {
-                    chmod($filepath, 0644);
-                    $photo_url = $upload_url_path . $filename;
+                    @chmod($filepath, 0644);
+                    $photo_url = '/uploads/AR-Rhma-final/uploads/members/' . $filename;
                     
                     // Delete old photo if updating
                     if ($id > 0) {
@@ -129,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute([$id]);
                         $old_member = $stmt->fetch();
                         if ($old_member && $old_member['photo_url']) {
-                            $old_full_path = $_SERVER['DOCUMENT_ROOT'] . $old_member['photo_url'];
+                            $old_full_path = $current_dir . $old_member['photo_url'];
                             if (file_exists($old_full_path)) {
                                 unlink($old_full_path);
                             }
@@ -185,12 +204,27 @@ include 'includes/admin_header.php';
 ?>
 
 <!-- Display upload directory info for debugging -->
+<?php if (isset($dir_error)): ?>
+<div class="alert alert-danger">
+    <strong>⚠️ Upload Directory Error!</strong><br>
+    The uploads directory cannot be created automatically. Please create it manually:<br>
+    <code><?php echo $upload_base_dir; ?></code><br><br>
+    <strong>Steps:</strong><br>
+    1. Use your hosting File Manager<br>
+    2. Navigate to: <code><?php echo $current_dir; ?></code><br>
+    3. Create folder: <code>uploads</code><br>
+    4. Inside uploads, create folder: <code>members</code><br>
+    5. Set permissions to 755 or 777
+</div>
+<?php endif; ?>
+
 <?php if (isset($_GET['debug'])): ?>
 <div class="alert alert-info">
     <strong>Debug Info:</strong><br>
+    Current Script Directory: <?php echo $current_dir; ?><br>
     Upload Directory: <?php echo $upload_base_dir; ?><br>
-    Directory Exists: <?php echo file_exists($upload_base_dir) ? 'Yes' : 'No'; ?><br>
-    Directory Writable: <?php echo is_writable($upload_base_dir) ? 'Yes' : 'No'; ?><br>
+    Directory Exists: <?php echo file_exists($upload_base_dir) ? '✅ Yes' : '❌ No'; ?><br>
+    Directory Writable: <?php echo is_writable($upload_base_dir) ? '✅ Yes' : '❌ No'; ?><br>
     PHP upload_max_filesize: <?php echo ini_get('upload_max_filesize'); ?><br>
     PHP post_max_size: <?php echo ini_get('post_max_size'); ?>
 </div>
