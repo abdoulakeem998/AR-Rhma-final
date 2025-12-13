@@ -71,6 +71,8 @@ include 'includes/header.php';
                                         <i class="fas fa-user"></i>
                                     </div>
                                 <?php endif; ?>
+                                
+                                <?php if ($member['social_facebook'] || $member['social_twitter'] || $member['social_linkedin']): ?>
                                 <div class="member-overlay">
                                     <div class="social-links">
                                         <?php if ($member['social_facebook']): ?>
@@ -101,6 +103,7 @@ include 'includes/header.php';
                                         <?php endif; ?>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                             </div>
                             
                             <div class="member-info">
@@ -111,6 +114,7 @@ include 'includes/header.php';
                                     <p class="member-bio"><?= htmlspecialchars(substr($member['bio'], 0, 150)) ?><?= strlen($member['bio']) > 150 ? '...' : '' ?></p>
                                 <?php endif; ?>
                                 
+                                <?php if ($member['email'] || $member['phone']): ?>
                                 <div class="member-contact">
                                     <?php if ($member['email']): ?>
                                         <a href="mailto:<?= htmlspecialchars($member['email']) ?>" 
@@ -130,6 +134,7 @@ include 'includes/header.php';
                                         </a>
                                     <?php endif; ?>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -149,7 +154,7 @@ include 'includes/header.php';
                     <p class="mb-lg-0">We're always looking for passionate individuals who want to make a difference. 
                     If you share our vision of serving those in need, we'd love to hear from you.</p>
                 </div>
-                <div class="col-lg-4 text-lg-end">
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
                     <a href="volunteer.php" class="btn btn-light btn-lg">
                         <i class="fas fa-user-plus"></i> Become a Volunteer
                     </a>
@@ -160,7 +165,7 @@ include 'includes/header.php';
 </section>
 
 <!-- Team Values -->
-<section class="team-values py-5 bg-light">
+<section class="team-values py-5">
     <div class="container">
         <div class="section-header text-center mb-5">
             <h2 class="animate-title">Our Core Values</h2>
