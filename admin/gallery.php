@@ -69,14 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
             
             if (!in_array($file_type, $allowed_types)) {
                 $errors[] = "$file_name: Invalid file type";
-                echo('type error', $i);
                 $error_count++;
                 continue;
             }
             
             if ($file_size > $max_size) {
                 $errors[] = "$file_name: File too large (max 5MB)";
-               echo('size error', $i);
                 $error_count++;
                 continue;
             }
@@ -97,14 +95,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
                 $upload_count++;
             } else {
                 $errors[] = "$file_name: Upload failed";
-               echo('upload error', $i);
                 $error_count++;
             }
         }
     }
     
     if ($upload_count > 0) {
-        echo('logging activity==============================');
         logAdminActivity(getCurrentAdminId(), 'upload', 'gallery_images', 0, "Uploaded $upload_count image(s)");
         setFlashMessage('success', "$upload_count image(s) uploaded successfully");
     }
