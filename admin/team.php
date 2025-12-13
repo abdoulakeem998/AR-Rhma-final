@@ -3,6 +3,16 @@ require_once '../config/database.php';
 require_once '../includes/functions.php';
 requireAdmin();
 
+// Temporary: enable full error reporting and log to a file for debugging (remove in production)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+ini_set('log_errors', 1);
+$debugLogDir = __DIR__ . '/../logs';
+if (!file_exists($debugLogDir)) {
+    @mkdir($debugLogDir, 0755, true);
+}
+ini_set('error_log', $debugLogDir . '/php_errors.log');
 // Handle delete
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
