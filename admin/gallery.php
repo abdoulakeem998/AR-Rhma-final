@@ -69,12 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
             
             if (!in_array($file_type, $allowed_types)) {
                 $errors[] = "$file_name: Invalid file type";
+                echo "<script>console.log('Invalid file type for $file_name');</script>";
                 $error_count++;
                 continue;
             }
             
             if ($file_size > $max_size) {
                 $errors[] = "$file_name: File too large (max 5MB)";
+                echo "<script>console.log('File size exceeded for $file_name');</script>";
                 $error_count++;
                 continue;
             }
@@ -82,6 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
             $extension = pathinfo($file_name, PATHINFO_EXTENSION);
             $filename = 'gallery_' . time() . '_' . $i . '_' . uniqid() . '.' . $extension;
             $filepath = $upload_base_dir . $filename;
+            echo "<script>console.log('Uploading file to $filepath');</script>";
             
             if (move_uploaded_file($file_tmp, $filepath)) {
                 chmod($filepath, 0777);
@@ -93,21 +96,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
                 $stmt->execute([$image_title, $description, $image_url, $category, getCurrentAdminId()]);
                 
                 $upload_count++;
+                echo "<script>console.log('Uploaded and saved $file_name successfully');</script>";
             } else {
                 $errors[] = "$file_name: Upload failed";
+                echo "<script>console.log('Failed to move uploaded file for $file_name');</script>";
                 $error_count++;
             }
         }
     }
     
     if ($upload_count > 0) {
+        echo "<script>console.log('Successfully uploaded $upload_count file(s)');</script>";
         logAdminActivity(getCurrentAdminId(), 'upload', 'gallery_images', 0, "Uploaded $upload_count image(s)");
         setFlashMessage('success', "$upload_count image(s) uploaded successfully");
     }
     
     if ($error_count > 0) {
+        echo "<script>console.log('Encountered $error_count error(s) during upload');</script>";
         setFlashMessage('warning', "Upload errors: " . implode(', ', $errors));
     }
+    echo "<script>console.log('Redirecting back to gallery.php');</script>";
     
     redirect($admin_base . 'gallery.php');
 }
@@ -385,5 +393,4 @@ document.getElementById('imageInput')?.addEventListener('change', function(e) {
     }
 });
 </script>
-755
 <?php include 'includes/admin_footer.php'; ?>
