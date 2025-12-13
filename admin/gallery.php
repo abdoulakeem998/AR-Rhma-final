@@ -11,14 +11,15 @@ error_reporting(E_ALL);
 $base = defined('BASE_PATH') ? BASE_PATH : '/';
 $admin_base = $base . 'admin/';
 
-// FIXED: Use relative path from current script location (hosting-specific fix)
+// FIXED: Correct upload paths
 $current_dir = dirname(dirname(__FILE__)); // Goes up one level from admin/
 $upload_base_dir = $current_dir . '/uploads/gallery/';
-$upload_url_path = '/uploads/AR-Rhma-final/uploads/gallery/';
+$upload_url_path = '/uploads/gallery/'; // FIXED: Removed duplicate folder
 
 // Debug info (you can remove this after it works)
 error_log("Current directory: " . $current_dir);
 error_log("Upload directory: " . $upload_base_dir);
+error_log("Upload URL path: " . $upload_url_path);
 
 // Create directory if it doesn't exist
 if (!file_exists($upload_base_dir)) {
@@ -146,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
         // Attempt upload
         if (move_uploaded_file($file_info['tmp_name'], $filepath)) {
             chmod($filepath, 0644);
-            $image_url = '/uploads/AR-Rhma-final/uploads/gallery/' . $filename;
+            $image_url = $upload_url_path . $filename; // FIXED: Use correct path
             
             // Save to database
             $image_title = $title ?: pathinfo($file_info['name'], PATHINFO_FILENAME);
@@ -220,6 +221,7 @@ include 'includes/admin_header.php';
 <div class="alert alert-info">
     <strong>Debug Info:</strong><br>
     Upload Directory: <?php echo $upload_base_dir; ?><br>
+    Upload URL Path: <?php echo $upload_url_path; ?><br>
     Directory Exists: <?php echo file_exists($upload_base_dir) ? 'Yes' : 'No'; ?><br>
     Directory Writable: <?php echo is_writable($upload_base_dir) ? 'Yes' : 'No'; ?><br>
     PHP upload_max_filesize: <?php echo ini_get('upload_max_filesize'); ?><br>

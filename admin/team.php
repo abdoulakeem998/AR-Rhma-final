@@ -11,14 +11,15 @@ error_reporting(E_ALL);
 $base = defined('BASE_PATH') ? BASE_PATH : '/';
 $admin_base = $base . 'admin/';
 
-// FIXED: Use relative path from current script location
+// FIXED: Correct upload paths
 $current_dir = dirname(dirname(__FILE__)); // Goes up one level from admin/
 $upload_base_dir = $current_dir . '/uploads/members/';
-$upload_url_path = '/uploads/AR-Rhma-final/uploads/members/';
+$upload_url_path = '/uploads/members/'; // FIXED: Removed duplicate folder
 
 // Debug info (you can remove this after it works)
 error_log("Current directory: " . $current_dir);
 error_log("Upload directory: " . $upload_base_dir);
+error_log("Upload URL path: " . $upload_url_path);
 
 // Create directory if it doesn't exist
 if (!file_exists($upload_base_dir)) {
@@ -48,7 +49,7 @@ if (isset($_GET['delete'])) {
         if ($stmt->execute([$id])) {
             // Delete photo file if exists
             if ($member && $member['photo_url']) {
-                $full_path = $current_dir . $member['photo_url'];
+                $full_path = $_SERVER['DOCUMENT_ROOT'] . $member['photo_url'];
                 if (file_exists($full_path)) {
                     unlink($full_path);
                 }
@@ -140,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Attempt upload
                 if (move_uploaded_file($file_info['tmp_name'], $filepath)) {
                     @chmod($filepath, 0644);
-                    $photo_url = '/uploads/AR-Rhma-final/uploads/members/' . $filename;
+                    $photo_url = $upload_url_path . $filename; // FIXED: Use correct path
                     
                     // Delete old photo if updating
                     if ($id > 0) {
@@ -148,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute([$id]);
                         $old_member = $stmt->fetch();
                         if ($old_member && $old_member['photo_url']) {
-                            $old_full_path = $current_dir . $old_member['photo_url'];
+                            $old_full_path = $_SERVER['DOCUMENT_ROOT'] . $old_member['photo_url'];
                             if (file_exists($old_full_path)) {
                                 unlink($old_full_path);
                             }
@@ -223,6 +224,7 @@ include 'includes/admin_header.php';
     <strong>Debug Info:</strong><br>
     Current Script Directory: <?php echo $current_dir; ?><br>
     Upload Directory: <?php echo $upload_base_dir; ?><br>
+    Upload URL Path: <?php echo $upload_url_path; ?><br>
     Directory Exists: <?php echo file_exists($upload_base_dir) ? '✅ Yes' : '❌ No'; ?><br>
     Directory Writable: <?php echo is_writable($upload_base_dir) ? '✅ Yes' : '❌ No'; ?><br>
     PHP upload_max_filesize: <?php echo ini_get('upload_max_filesize'); ?><br>
