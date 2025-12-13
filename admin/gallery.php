@@ -3,65 +3,38 @@ require_once '../config/database.php';
 require_once '../includes/functions.php';
 requireAdmin();
 
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
 // Get base path
 $base = defined('BASE_PATH') ? BASE_PATH : '/';
 $admin_base = $base . 'admin/';
 
-// FIXED: Correct upload paths
-$current_dir = dirname(dirname(__FILE__)); // Goes up one level from admin/
-$upload_base_dir = '/home/ngoila.karimou/public_html/uploads/AR-Rhma-final/admin/gallery/';
-$upload_url_path = '/~ngoila.karimou/uploads/AR-Rhma-final/admin/gallery/';
-
-// Debug info (you can remove this after it works)
-error_log("Current directory: " . $current_dir);
-error_log("Upload directory: " . $upload_base_dir);
-error_log("Upload URL path: " . $upload_url_path);
-
-// Create directory if it doesn't exist
-if (!file_exists($upload_base_dir)) {
-    // Try to create it
-    if (@mkdir($upload_base_dir, 0755, true)) {
-        @chmod($upload_base_dir, 0755);
-        error_log("Successfully created directory: " . $upload_base_dir);
-    } else {
-        error_log("Failed to create directory: " . $upload_base_dir);
-        // Set a flag to show error to user
-        $dir_error = true;
-    }
-}
+// Define upload directory - use absolute path
+$upload_base_dir = $_SERVER['DOCUMENT_ROOT'] . $base . 'uploads/gallery/';
+$upload_url_path = 'uploads/gallery/';
 
 // Handle delete
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     
-    try {
-        // Get image path before deleting
-        $stmt = $pdo->prepare("SELECT image_url FROM gallery WHERE id = ?");
-        $stmt->execute([$id]);
-        $image = $stmt->fetch();
-        
-        // Delete from database
-        $stmt = $pdo->prepare("DELETE FROM gallery WHERE id = ?");
-        if ($stmt->execute([$id])) {
-            // Delete image file if exists
-            if ($image && $image['image_url']) {
-                $full_path = $_SERVER['DOCUMENT_ROOT'] . $image['image_url'];
-                if (file_exists($full_path)) {
-                    unlink($full_path);
-                }
+    // Get image path before deleting
+    $stmt = $pdo->prepare("SELECT image_url FROM gallery WHERE id = ?");
+    $stmt->execute([$id]);
+    $image = $stmt->fetch();
+    
+    // Delete from database
+    $stmt = $pdo->prepare("DELETE FROM gallery WHERE id = ?");
+    if ($stmt->execute([$id])) {
+        // Delete image file if exists
+        if ($image && $image['image_url']) {
+            $full_path = $_SERVER['DOCUMENT_ROOT'] . $base . $image['image_url'];
+            if (file_exists($full_path)) {
+                unlink($full_path);
             }
-            
-            logAdminActivity(getCurrentAdminId(), 'delete', 'gallery_image', $id, 'Deleted gallery image');
-            setFlashMessage('success', 'Image deleted successfully');
         }
-    } catch (Exception $e) {
-        setFlashMessage('danger', 'Error deleting image: ' . $e->getMessage());
+        
+        logAdminActivity(getCurrentAdminId(), 'delete', 'gallery_image', $id, 'Deleted gallery image');
+        setFlashMessage('success', 'Image deleted successfully');
+        redirect($admin_base . 'gallery.php');
     }
-    redirect($admin_base . 'gallery.php');
 }
 
 // Handle upload
@@ -74,101 +47,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
     $error_count = 0;
     $errors = [];
     
+    // Create directory if it doesn't exist
+    if (!file_exists($upload_base_dir)) {
+        mkdir($upload_base_dir, 0777, true);
+        chmod($upload_base_dir, 0777);
+    }
+    
     // Handle multiple file uploads
     $files = $_FILES['images'];
     $file_count = count($files['name']);
     
     for ($i = 0; $i < $file_count; $i++) {
-        // Skip if no file uploaded for this slot
-        if ($files['error'][$i] === UPLOAD_ERR_NO_FILE) {
-            continue;
-        }
-        
-        // Check for upload errors
-        if ($files['error'][$i] !== UPLOAD_ERR_OK) {
-            $upload_errors_map = [
-                UPLOAD_ERR_INI_SIZE => 'exceeds upload_max_filesize',
-                UPLOAD_ERR_FORM_SIZE => 'exceeds MAX_FILE_SIZE',
-                UPLOAD_ERR_PARTIAL => 'only partially uploaded',
-                UPLOAD_ERR_NO_TMP_DIR => 'missing temporary folder',
-                UPLOAD_ERR_CANT_WRITE => 'failed to write to disk',
-                UPLOAD_ERR_EXTENSION => 'PHP extension stopped upload'
-            ];
-            $errors[] = $files['name'][$i] . ': ' . ($upload_errors_map[$files['error'][$i]] ?? 'unknown error');
-            $error_count++;
-            continue;
-        }
-        
-        // Validate file
-        $file_info = [
-            'name' => $files['name'][$i],
-            'type' => $files['type'][$i],
-            'tmp_name' => $files['tmp_name'][$i],
-            'size' => $files['size'][$i]
-        ];
-        
-        // Get actual mime type
-        if (file_exists($file_info['tmp_name'])) {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $actual_mime = finfo_file($finfo, $file_info['tmp_name']);
-            finfo_close($finfo);
-        } else {
-            $errors[] = $file_info['name'] . ': Temporary file not found';
-            $error_count++;
-            continue;
-        }
-        
-        $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-        $max_size = 5 * 1024 * 1024; // 5MB
-        
-        if (!in_array($actual_mime, $allowed_types)) {
-            $errors[] = $file_info['name'] . ': Invalid type (' . $actual_mime . ')';
-            $error_count++;
-            continue;
-        }
-        
-        if ($file_info['size'] > $max_size) {
-            $errors[] = $file_info['name'] . ': Too large (' . round($file_info['size'] / 1024 / 1024, 2) . 'MB)';
-            $error_count++;
-            continue;
-        }
-        
-        if ($file_info['size'] == 0) {
-            $errors[] = $file_info['name'] . ': Empty file';
-            $error_count++;
-            continue;
-        }
-        
-        // Create unique filename
-        $extension = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
-        $filename = 'gallery_' . time() . '_' . $i . '_' . uniqid() . '.' . $extension;
-        $filepath = $upload_base_dir . $filename;
-        
-        // Attempt upload
-        if (move_uploaded_file($file_info['tmp_name'], $filepath)) {
-            chmod($filepath, 0644);
-            $image_url = $upload_url_path . $filename; // FIXED: Use correct path
+        if ($files['error'][$i] === UPLOAD_ERR_OK) {
+            $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            $max_size = 5 * 1024 * 1024; // 5MB
             
-            // Save to database
-            $image_title = $title ?: pathinfo($file_info['name'], PATHINFO_FILENAME);
-            try {
+            $file_type = $files['type'][$i];
+            $file_size = $files['size'][$i];
+            $file_tmp = $files['tmp_name'][$i];
+            $file_name = $files['name'][$i];
+            
+            if (!in_array($file_type, $allowed_types)) {
+                $errors[] = "$file_name: Invalid file type";
+                $error_count++;
+                continue;
+            }
+            
+            if ($file_size > $max_size) {
+                $errors[] = "$file_name: File too large (max 5MB)";
+                $error_count++;
+                continue;
+            }
+            
+            $extension = pathinfo($file_name, PATHINFO_EXTENSION);
+            $filename = 'gallery_' . time() . '_' . $i . '_' . uniqid() . '.' . $extension;
+            $filepath = $upload_base_dir . $filename;
+            
+            if (move_uploaded_file($file_tmp, $filepath)) {
+                chmod($filepath, 0644);
+                $image_url = $upload_url_path . $filename;
+                
+                // Save to database
+                $image_title = $title ?: pathinfo($file_name, PATHINFO_FILENAME);
                 $stmt = $pdo->prepare("INSERT INTO gallery (title, description, image_url, category, uploaded_by) VALUES (?, ?, ?, ?, ?)");
                 $stmt->execute([$image_title, $description, $image_url, $category, getCurrentAdminId()]);
+                
                 $upload_count++;
-            } catch (Exception $e) {
-                $errors[] = $file_info['name'] . ': Database error - ' . $e->getMessage();
+            } else {
+                $errors[] = "$file_name: Upload failed";
                 $error_count++;
-                // Delete the uploaded file since database insert failed
-                if (file_exists($filepath)) {
-                    unlink($filepath);
-                }
             }
-        } else {
-            $errors[] = $file_info['name'] . ': Failed to move file';
-            $error_count++;
-            error_log("Upload failed for: " . $file_info['name']);
-            error_log("  Destination: " . $filepath);
-            error_log("  Directory writable: " . (is_writable($upload_base_dir) ? 'Yes' : 'No'));
         }
     }
     
@@ -178,12 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
     }
     
     if ($error_count > 0) {
-        $error_msg = count($errors) <= 3 ? implode('; ', $errors) : implode('; ', array_slice($errors, 0, 3)) . ' and ' . (count($errors) - 3) . ' more...';
-        setFlashMessage('warning', "Upload errors: " . $error_msg);
-    }
-    
-    if ($upload_count == 0 && $error_count == 0) {
-        setFlashMessage('warning', 'No files were uploaded. Please select at least one image.');
+        setFlashMessage('warning', "Upload errors: " . implode(', ', $errors));
     }
     
     redirect($admin_base . 'gallery.php');
@@ -200,35 +123,6 @@ $images = $stmt->fetchAll();
 
 include 'includes/admin_header.php';
 ?>
-
-<!-- Display upload directory error if creation failed -->
-<?php if (isset($dir_error)): ?>
-<div class="alert alert-danger">
-    <strong>⚠️ Upload Directory Error!</strong><br>
-    The uploads directory cannot be created automatically. Please create it manually:<br>
-    <code><?php echo $upload_base_dir; ?></code><br><br>
-    <strong>Steps:</strong><br>
-    1. Use your hosting File Manager<br>
-    2. Navigate to: <code><?php echo $current_dir; ?></code><br>
-    3. Create folder: <code>uploads</code><br>
-    4. Inside uploads, create folder: <code>gallery</code><br>
-    5. Set permissions to 755
-</div>
-<?php endif; ?>
-
-<!-- Display upload directory info for debugging -->
-<?php if (isset($_GET['debug'])): ?>
-<div class="alert alert-info">
-    <strong>Debug Info:</strong><br>
-    Upload Directory: <?php echo $upload_base_dir; ?><br>
-    Upload URL Path: <?php echo $upload_url_path; ?><br>
-    Directory Exists: <?php echo file_exists($upload_base_dir) ? 'Yes' : 'No'; ?><br>
-    Directory Writable: <?php echo is_writable($upload_base_dir) ? 'Yes' : 'No'; ?><br>
-    PHP upload_max_filesize: <?php echo ini_get('upload_max_filesize'); ?><br>
-    PHP post_max_size: <?php echo ini_get('post_max_size'); ?><br>
-    PHP max_file_uploads: <?php echo ini_get('max_file_uploads'); ?>
-</div>
-<?php endif; ?>
 
 <div class="admin-content">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -277,7 +171,7 @@ include 'includes/admin_header.php';
         <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
             <div class="card gallery-item h-100">
                 <div class="gallery-image-wrapper">
-                    <img src="<?php echo htmlspecialchars($image['image_url']); ?>" 
+                    <img src="<?php echo $base . htmlspecialchars($image['image_url']); ?>" 
                          class="card-img-top gallery-image" 
                          alt="<?php echo htmlspecialchars($image['title']); ?>">
                     <div class="gallery-overlay">
@@ -313,7 +207,7 @@ include 'includes/admin_header.php';
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body text-center">
-                        <img src="<?php echo htmlspecialchars($image['image_url']); ?>" 
+                        <img src="<?php echo $base . htmlspecialchars($image['image_url']); ?>" 
                              class="img-fluid" 
                              alt="<?php echo htmlspecialchars($image['title']); ?>">
                         <?php if ($image['description']): ?>
@@ -325,7 +219,7 @@ include 'includes/admin_header.php';
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <a href="<?php echo htmlspecialchars($image['image_url']); ?>" 
+                        <a href="<?php echo $base . htmlspecialchars($image['image_url']); ?>" 
                            download 
                            class="btn btn-primary">
                             <i class="bi bi-download"></i> Download
@@ -361,7 +255,7 @@ include 'includes/admin_header.php';
                     </div>
                     
                     <div id="imagePreviewContainer" class="mb-3" style="display: none;">
-                        <label class="form-label">Preview (<span id="fileCount">0</span> file(s) selected):</label>
+                        <label class="form-label">Preview:</label>
                         <div id="imagePreviews" class="d-flex flex-wrap gap-2"></div>
                     </div>
                     
@@ -391,7 +285,7 @@ include 'includes/admin_header.php';
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="bi bi-x-circle"></i> Cancel
                     </button>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <button type="submit" class="btn btn-primary">
                         <i class="bi bi-cloud-upload"></i> Upload Images
                     </button>
                 </div>
@@ -464,60 +358,31 @@ include 'includes/admin_header.php';
 </style>
 
 <script>
-// Enhanced multiple image preview
+// Multiple image preview
 document.getElementById('imageInput')?.addEventListener('change', function(e) {
     const files = e.target.files;
     const container = document.getElementById('imagePreviewContainer');
     const previews = document.getElementById('imagePreviews');
-    const fileCount = document.getElementById('fileCount');
     
     previews.innerHTML = '';
     
     if (files.length > 0) {
         container.style.display = 'block';
-        fileCount.textContent = files.length;
-        
-        let validCount = 0;
-        let tooLarge = 0;
         
         Array.from(files).forEach(file => {
             if (file.type.startsWith('image/')) {
-                // Check size
-                if (file.size > 5 * 1024 * 1024) {
-                    tooLarge++;
-                    return;
-                }
-                
-                validCount++;
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
-                    img.title = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
                     previews.appendChild(img);
                 }
                 reader.readAsDataURL(file);
             }
         });
-        
-        if (tooLarge > 0) {
-            const warning = document.createElement('div');
-            warning.className = 'alert alert-warning mt-2';
-            warning.textContent = `⚠️ ${tooLarge} file(s) are too large (over 5MB) and will be skipped`;
-            previews.appendChild(warning);
-        }
-        
-        fileCount.textContent = validCount;
     } else {
         container.style.display = 'none';
     }
-});
-
-// Prevent double submission
-document.getElementById('uploadForm')?.addEventListener('submit', function(e) {
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
 });
 </script>
 
