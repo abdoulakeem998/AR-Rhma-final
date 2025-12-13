@@ -69,14 +69,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
             
             if (!in_array($file_type, $allowed_types)) {
                 $errors[] = "$file_name: Invalid file type";
-                console.log($file_type, $allowed_types, 'type error', $i);
+                echo('type error', $i);
                 $error_count++;
                 continue;
             }
             
             if ($file_size > $max_size) {
                 $errors[] = "$file_name: File too large (max 5MB)";
-                console.log($file_size, 'size error', $i);
+               echo('size error', $i);
                 $error_count++;
                 continue;
             }
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
             $filepath = $upload_base_dir . $filename;
             
             if (move_uploaded_file($file_tmp, $filepath)) {
-                chmod($filepath, 777);
+                chmod($filepath, 0777);
                 $image_url = $upload_url_path . $filename;
                 
                 // Save to database
@@ -97,14 +97,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
                 $upload_count++;
             } else {
                 $errors[] = "$file_name: Upload failed";
-                console.log('move failed', $i);
+               echo('upload error', $i);
                 $error_count++;
             }
         }
     }
     
     if ($upload_count > 0) {
-        console.log('logging activity==============================');
+        echo('logging activity==============================');
         logAdminActivity(getCurrentAdminId(), 'upload', 'gallery_images', 0, "Uploaded $upload_count image(s)");
         setFlashMessage('success', "$upload_count image(s) uploaded successfully");
     }
