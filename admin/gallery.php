@@ -293,6 +293,7 @@ include 'includes/admin_header.php';
 .gallery-item {
     transition: all 0.3s ease;
     overflow: hidden;
+    width: 400%;
 }
 
 .gallery-item:hover {
