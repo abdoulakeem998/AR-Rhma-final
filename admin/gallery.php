@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
             
             if ($file_size > $max_size) {
                 $errors[] = "$file_name: File too large (max 5MB)";
-                console.log
+                console.log($file_size, 'size error', $i);
                 $error_count++;
                 continue;
             }
