@@ -2,7 +2,6 @@
 require_once '../config/database.php';
 require_once '../includes/functions.php';
 
-// Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -29,78 +28,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_FILES['activity_image']) && $_FILES['activity_image']['error'] !== UPLOAD_ERR_NO_FILE) {
             $file = $_FILES['activity_image'];
             
-            // Debug information
-            error_log("Upload attempt - Name: {$file['name']}, Size: {$file['size']}, Type: {$file['type']}, Error: {$file['error']}");
-            
             if ($file['error'] === UPLOAD_ERR_OK) {
                 $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
                 $file_type = mime_content_type($file['tmp_name']);
                 $file_size = $file['size'];
-                $max_size = 5 * 1024 * 1024; // 5MB
+                $max_size = 5 * 1024 * 1024;
                 
                 if (!in_array($file_type, $allowed_types)) {
-                    $upload_error = "Invalid file type: $file_type. Allowed: JPG, PNG, GIF";
+                    $upload_error = "Invalid file type. Allowed: JPG, PNG, GIF";
                 } elseif ($file_size > $max_size) {
-                    $upload_error = "File too large: " . round($file_size/1024/1024, 2) . "MB. Max: 5MB";
+                    $upload_error = "File too large. Max: 5MB";
                 } else {
-                    // Create upload directory if it doesn't exist
                     $upload_dir = '../uploads/activities/';
                     if (!file_exists($upload_dir)) {
-                        if (!mkdir($upload_dir, 0755, true)) {
-                            $upload_error = "Failed to create upload directory. Please create 'uploads/activities/' folder and set permissions to 755";
-                            error_log("Failed to create directory: $upload_dir");
-                        }
+                        mkdir($upload_dir, 0755, true);
                     }
                     
-                    if (empty($upload_error)) {
-                        // Check if directory is writable
-                        if (!is_writable($upload_dir)) {
-                            $upload_error = "Upload directory is not writable. Please set permissions to 755 or 777";
-                            error_log("Directory not writable: $upload_dir");
+                    if (is_writable($upload_dir)) {
+                        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                        $filename = 'activity_' . time() . '_' . uniqid() . '.' . $extension;
+                        $target_path = $upload_dir . $filename;
+                        
+                        if (move_uploaded_file($file['tmp_name'], $target_path)) {
+                            // Save path WITHOUT ../ prefix (just uploads/activities/filename.jpg)
+                            $image_path = 'uploads/activities/' . $filename;
                         } else {
-                            // Generate unique filename
-                            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                            $filename = 'activity_' . time() . '_' . uniqid() . '.' . $extension;
-                            $target_path = $upload_dir . $filename;
-                            
-                            // Move uploaded file
-                            if (move_uploaded_file($file['tmp_name'], $target_path)) {
-                                $image_path = 'uploads/activities/' . $filename;
-                                error_log("File uploaded successfully: $image_path");
-                            } else {
-                                $upload_error = "Failed to move uploaded file. Check folder permissions.";
-                                error_log("move_uploaded_file failed: {$file['tmp_name']} to $target_path");
-                            }
+                            $upload_error = "Failed to upload image";
                         }
+                    } else {
+                        $upload_error = "Upload directory not writable";
                     }
                 }
             } else {
                 $upload_errors = [
-                    UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize directive in php.ini',
-                    UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE directive in HTML form',
+                    UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize',
+                    UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE',
                     UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
-                    UPLOAD_ERR_NO_FILE => 'No file was uploaded',
                     UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
                     UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
-                    UPLOAD_ERR_EXTENSION => 'PHP extension stopped the upload'
+                    UPLOAD_ERR_EXTENSION => 'PHP extension stopped upload'
                 ];
-                $upload_error = $upload_errors[$file['error']] ?? "Unknown upload error (code: {$file['error']})";
-                error_log("Upload error code {$file['error']}: $upload_error");
+                $upload_error = $upload_errors[$file['error']] ?? "Unknown upload error";
             }
         }
         
         if (!empty($upload_error)) {
             $error = $upload_error;
         } else {
-            // Insert into database
             $stmt = $pdo->prepare("INSERT INTO activities (title, description, category, image_path, is_featured, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
             
             if ($stmt->execute([$title, $description, $category, $image_path, $is_featured, $status, $_SESSION['user_id']])) {
                 logAdminActivity($_SESSION['user_id'], 'create', 'activities', "Created activity: $title");
                 $message = "Activity created successfully!";
             } else {
-                $error = "Database error: " . implode(", ", $stmt->errorInfo());
-                error_log("Database insert failed: " . print_r($stmt->errorInfo(), true));
+                $error = "Failed to create activity";
             }
         }
     }
@@ -132,9 +113,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $max_size = 5 * 1024 * 1024;
                 
                 if (!in_array($file_type, $allowed_types)) {
-                    $upload_error = "Invalid file type. Allowed: JPG, PNG, GIF";
+                    $upload_error = "Invalid file type";
                 } elseif ($file_size > $max_size) {
-                    $upload_error = "File too large. Max: 5MB";
+                    $upload_error = "File too large";
                 } else {
                     $upload_dir = '../uploads/activities/';
                     if (!file_exists($upload_dir)) {
@@ -180,7 +161,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['delete_activity'])) {
         $id = (int)$_POST['activity_id'];
         
-        // Get image path
         $stmt = $pdo->prepare("SELECT title, image_path FROM activities WHERE id = ?");
         $stmt->execute([$id]);
         $activity = $stmt->fetch();
@@ -191,7 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unlink('../' . $activity['image_path']);
             }
             
-            // Delete from database
             $stmt = $pdo->prepare("DELETE FROM activities WHERE id = ?");
             if ($stmt->execute([$id])) {
                 logAdminActivity($_SESSION['user_id'], 'delete', 'activities', "Deleted activity: {$activity['title']}");
@@ -239,13 +218,6 @@ $activities = $stmt->fetchAll();
             background: #1a3a1b;
             border-color: #1a3a1b;
         }
-        .upload-info {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-size: 0.9rem;
-        }
     </style>
 </head>
 <body>
@@ -277,40 +249,6 @@ $activities = $stmt->fetchAll();
                     </div>
                 <?php endif; ?>
                 
-                <!-- Upload System Status -->
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5><i class="fas fa-info-circle"></i> Upload System Status</h5>
-                        <div class="row mt-3">
-                            <div class="col-md-4">
-                                <strong>Upload Directory:</strong><br>
-                                <?php
-                                $upload_dir = '../uploads/activities/';
-                                if (file_exists($upload_dir)) {
-                                    if (is_writable($upload_dir)) {
-                                        echo '<span class="text-success"><i class="fas fa-check-circle"></i> Exists and writable</span>';
-                                    } else {
-                                        echo '<span class="text-danger"><i class="fas fa-times-circle"></i> Exists but NOT writable</span><br>';
-                                        echo '<small>Run: chmod 755 uploads/activities/</small>';
-                                    }
-                                } else {
-                                    echo '<span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Does not exist</span><br>';
-                                    echo '<small>Will be created on first upload</small>';
-                                }
-                                ?>
-                            </div>
-                            <div class="col-md-4">
-                                <strong>Max Upload Size:</strong><br>
-                                <?= ini_get('upload_max_filesize') ?>
-                            </div>
-                            <div class="col-md-4">
-                                <strong>Post Max Size:</strong><br>
-                                <?= ini_get('post_max_size') ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0"><i class="fas fa-list"></i> All Activities</h5>
@@ -341,7 +279,8 @@ $activities = $stmt->fetchAll();
                                             <tr>
                                                 <td>
                                                     <?php if ($activity['image_path']): ?>
-                                                        <img src="../<?= htmlspecialchars($activity['image_path']) ?>" 
+                                                        <!-- FIXED: Remove the ../ prefix since image_path already contains uploads/activities/ -->
+                                                        <img src="<?= htmlspecialchars('../' . $activity['image_path']) ?>" 
                                                              alt="Activity" class="activity-image"
                                                              onerror="this.src='https://via.placeholder.com/60x60?text=No+Image'">
                                                     <?php else: ?>
@@ -396,11 +335,6 @@ $activities = $stmt->fetchAll();
                 </div>
                 <form method="POST" enctype="multipart/form-data">
                     <div class="modal-body">
-                        <div class="upload-info">
-                            <i class="fas fa-info-circle"></i> 
-                            <strong>Image Upload:</strong> JPG, PNG, or GIF • Max size: 5MB • Recommended: 800x600px
-                        </div>
-                        
                         <div class="mb-3">
                             <label class="form-label">Title *</label>
                             <input type="text" name="title" class="form-control" required>
@@ -429,6 +363,7 @@ $activities = $stmt->fetchAll();
                             <input type="file" name="activity_image" class="form-control" 
                                    accept="image/jpeg,image/jpg,image/png,image/gif"
                                    onchange="previewImage(this, 'createPreview')">
+                            <small class="text-muted">Max 5MB. Supported: JPG, PNG, GIF</small>
                             <img id="createPreview" class="image-preview" style="display:none;">
                         </div>
                         
@@ -476,11 +411,6 @@ $activities = $stmt->fetchAll();
                 <form method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="activity_id" id="edit_id">
                     <div class="modal-body">
-                        <div class="upload-info">
-                            <i class="fas fa-info-circle"></i> 
-                            Upload a new image to replace the current one (optional)
-                        </div>
-                        
                         <div class="mb-3">
                             <label class="form-label">Title *</label>
                             <input type="text" name="title" id="edit_title" class="form-control" required>
@@ -557,7 +487,6 @@ $activities = $stmt->fetchAll();
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Activities data for JavaScript
         const activities = <?= json_encode($activities) ?>;
         
         function previewImage(input, previewId) {
@@ -585,7 +514,6 @@ $activities = $stmt->fetchAll();
             document.getElementById('edit_status').value = activity.status;
             document.getElementById('edit_featured').checked = activity.is_featured == 1;
             
-            // Show current image
             const currentImageDiv = document.getElementById('current_image_display');
             if (activity.image_path) {
                 currentImageDiv.innerHTML = `<img src="../${activity.image_path}" class="image-preview" alt="Current image">`;
@@ -593,14 +521,13 @@ $activities = $stmt->fetchAll();
                 currentImageDiv.innerHTML = '<p class="text-muted">No image uploaded</p>';
             }
             
-            // Reset new image preview
             document.getElementById('editPreview').style.display = 'none';
             
             new bootstrap.Modal(document.getElementById('editModal')).show();
         }
         
         function deleteActivity(id, title) {
-            if (confirm(`Are you sure you want to delete "${title}"?\n\nThis will also delete the activity image.`)) {
+            if (confirm(`Are you sure you want to delete "${title}"?`)) {
                 document.getElementById('delete_id').value = id;
                 document.getElementById('deleteForm').submit();
             }
