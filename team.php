@@ -18,53 +18,78 @@ $team_members = $stmt->fetchAll();
 <body>
     <?php include 'includes/header.php'; ?>
 
-    <section class="hero-section" style="padding: 3rem 0;">
-        <div class="container text-center">
-            <h1>Our Team</h1>
-            <p class="lead">Meet the dedicated individuals behind AR-Rahma</p>
+    <!-- Hero Section -->
+    <section class="hero-section hero-team">
+        <div class="hero-overlay"></div>
+        <div class="container text-center hero-content">
+            <div class="hero-icon">
+                <i class="bi bi-people"></i>
+            </div>
+            <h1 class="hero-title">Our Team</h1>
+            <p class="hero-subtitle">Meet the dedicated individuals behind AR-Rahma</p>
         </div>
     </section>
 
+    <!-- Team Section -->
     <section class="section">
         <div class="container">
-            <div class="row">
-                <?php if (empty($team_members)): ?>
-                <div class="col-12 text-center py-5">
-                    <p>No team members to display yet.</p>
+            <?php if (empty($team_members)): ?>
+                <div class="text-center py-5">
+                    <i class="bi bi-people" style="font-size: 5rem; color: var(--border-color);"></i>
+                    <h3 class="mt-3">No Team Members Yet</h3>
+                    <p class="text-muted">Check back soon to meet our dedicated team.</p>
                 </div>
-                <?php else: ?>
-                <?php foreach ($team_members as $member): ?>
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 text-center">
-                        <div class="card-body p-4">
-                            <?php if ($member['photo_url']): ?>
-                            <img src="<?php echo htmlspecialchars($member['photo_url']); ?>" 
-                                 alt="<?php echo htmlspecialchars($member['full_name']); ?>"
-                                 class="rounded-circle mx-auto d-block mb-3"
-                                 style="width: 150px; height: 150px; object-fit: cover;"
-                                 onerror="this.src='assets/images/placeholder.jpg'">
-                            <?php else: ?>
-                            <div class="rounded-circle mx-auto d-block mb-3" 
-                                 style="width: 150px; height: 150px; background: var(--light-bg); display: flex; align-items: center; justify-content: center;">
-                                <i class="bi bi-person" style="font-size: 4rem; color: var(--light-text);"></i>
+            <?php else: ?>
+                <div class="row">
+                    <?php foreach ($team_members as $member): ?>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100 text-center">
+                            <div class="card-body p-4">
+                                <?php if ($member['photo_url']): ?>
+                                <img src="<?php echo htmlspecialchars($member['photo_url']); ?>" 
+                                     alt="<?php echo htmlspecialchars($member['full_name']); ?>"
+                                     class="rounded-circle mx-auto d-block mb-3"
+                                     style="width: 150px; height: 150px; object-fit: cover; border: 4px solid var(--primary-color);"
+                                     onerror="this.src='assets/images/placeholder.jpg'">
+                                <?php else: ?>
+                                <div class="rounded-circle mx-auto d-block mb-3" 
+                                     style="width: 150px; height: 150px; background: var(--light-bg); display: flex; align-items: center; justify-content: center; border: 4px solid var(--border-color);">
+                                    <i class="bi bi-person" style="font-size: 4rem; color: var(--light-text);"></i>
+                                </div>
+                                <?php endif; ?>
+                                
+                                <h5 class="mb-2"><?php echo htmlspecialchars($member['full_name']); ?></h5>
+                                <p class="text-muted mb-3" style="color: var(--secondary-color) !important; font-weight: 600;">
+                                    <?php echo htmlspecialchars($member['position']); ?>
+                                </p>
+                                
+                                <?php if ($member['bio']): ?>
+                                <p class="small text-muted mb-3"><?php echo truncateText($member['bio'], 150); ?></p>
+                                <?php endif; ?>
+                                
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <?php if ($member['email']): ?>
+                                    <a href="mailto:<?php echo htmlspecialchars($member['email']); ?>" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Email <?php echo htmlspecialchars($member['full_name']); ?>">
+                                        <i class="bi bi-envelope"></i> Email
+                                    </a>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($member['phone']): ?>
+                                    <a href="tel:<?php echo htmlspecialchars($member['phone']); ?>" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Call <?php echo htmlspecialchars($member['full_name']); ?>">
+                                        <i class="bi bi-telephone"></i> Call
+                                    </a>
+                                    <?php endif; ?>
+                                </div>
                             </div>
-                            <?php endif; ?>
-                            <h5><?php echo htmlspecialchars($member['full_name']); ?></h5>
-                            <p class="text-muted"><?php echo htmlspecialchars($member['position']); ?></p>
-                            <?php if ($member['bio']): ?>
-                            <p class="small"><?php echo truncateText($member['bio'], 150); ?></p>
-                            <?php endif; ?>
-                            <?php if ($member['email']): ?>
-                            <a href="mailto:<?php echo htmlspecialchars($member['email']); ?>" class="btn btn-sm btn-outline-primary mt-2">
-                                <i class="bi bi-envelope"></i> Email
-                            </a>
-                            <?php endif; ?>
                         </div>
                     </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
+            <?php endif; ?>
         </div>
     </section>
 
