@@ -1,15 +1,11 @@
 <?php
 session_start();
 require_once '../config/database.php';
-require_once '../includes/functions.php'; // FIXED: Was '../php/functions.php'
-
-// Get base path
-$base = defined('BASE_PATH') ? BASE_PATH : '/';
-$admin_base = $base . 'admin/';
+require_once '../php/functions.php';
 
 // Redirect if already logged in
 if (isAdminLoggedIn()) {
-    redirect($admin_base . 'index.php');
+    redirect('index.php');
 }
 
 $errors = [];
@@ -40,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Log activity
                 logAdminActivity($admin['id'], 'login', null, null, 'Admin logged in');
                 
-                redirect($admin_base . 'index.php');
+                redirect('index.php');
             } else {
                 $errors[] = 'Invalid username or password';
                 // Log failed attempt
@@ -62,10 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Admin Login - AR-Rahma</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?php echo $base; ?>css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
     <style>
         body {
-            background: linear-gradient(135deg, #2C5F2D 0%, #1a3a1b 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -74,18 +70,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .login-card {
             max-width: 450px;
             width: 100%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
         .login-header {
             text-align: center;
             margin-bottom: 2rem;
         }
         .login-header h1 {
-            color: #2C5F2D;
+            color: var(--primary-color);
             margin-bottom: 0.5rem;
         }
         .login-header p {
-            color: #666;
+            color: var(--light-text);
         }
     </style>
 </head>
@@ -96,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card login-card">
                     <div class="card-body p-5">
                         <div class="login-header">
-                            <i class="bi bi-shield-lock" style="font-size: 3rem; color: #2C5F2D;"></i>
+                            <i class="bi bi-shield-lock" style="font-size: 3rem; color: var(--primary-color);"></i>
                             <h1>Admin Panel</h1>
                             <p>AR-Rahma Content Management System</p>
                         </div>
@@ -141,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </button>
 
                             <div class="text-center">
-                                <a href="<?php echo $base; ?>index.php" class="text-muted">
+                                <a href="../index.php" class="text-muted">
                                     <i class="bi bi-arrow-left"></i> Back to Main Website
                                 </a>
                             </div>
@@ -151,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="text-center mt-3 text-white">
                     <small>
-                        <i class="bi bi-shield-check"></i> Secure Admin Access | Default: admin / admin123
+                        <i class="bi bi-shield-check"></i> Secure Admin Access
                     </small>
                 </div>
             </div>
