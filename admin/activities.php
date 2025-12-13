@@ -7,32 +7,21 @@ requireAdmin();
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Get base path
-$base = defined('BASE_PATH') ? BASE_PATH : '/';
+// ============================================
+// CHEMINS ABSOLUS CORRECTS POUR VOTRE HÉBERGEMENT
+// ============================================
+
+// VOTRE SITE EST À: http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/
+// DONC:
+$base = '/~ngoila.karimou/uploads/AR-Rhma-final/';
 $admin_base = $base . 'admin/';
 
-// FIXED: Correct upload paths
-$current_dir = dirname(dirname(__FILE__)); // Goes up one level from admin/
-$upload_base_dir = $current_dir . '/uploads/activities/';
-$upload_url_path = '/uploads/activities/'; // FIXED: Removed duplicate folder
+// CHEMIN SUR LE SERVEUR (OÙ SAUVEGARDER LES FICHIERS)
+$upload_base_dir = '/home/ngoila.karimou/public_html/uploads/AR-Rhma-final/activities/';
 
-// Debug info (you can remove this after it works)
-error_log("Current directory: " . $current_dir);
-error_log("Upload directory: " . $upload_base_dir);
-error_log("Upload URL path: " . $upload_url_path);
+// CHEMIN WEB (POUR AFFICHER LES IMAGES)
+$upload_url_path = '/~ngoila.karimou/uploads/AR-Rhma-final/activities/';
 
-// Create directory if it doesn't exist
-if (!file_exists($upload_base_dir)) {
-    // Try to create it
-    if (@mkdir($upload_base_dir, 0755, true)) {
-        @chmod($upload_base_dir, 0755);
-        error_log("Successfully created directory: " . $upload_base_dir);
-    } else {
-        error_log("Failed to create directory: " . $upload_base_dir);
-        // Set a flag to show error to user
-        $dir_error = true;
-    }
-}
 
 // Handle delete
 if (isset($_GET['delete'])) {
