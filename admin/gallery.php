@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['images'])) {
             $filepath = $upload_base_dir . $filename;
             
             if (move_uploaded_file($file_tmp, $filepath)) {
-                chmod($filepath, 0644);
+                chmod($filepath, 777);
                 $image_url = $upload_url_path . $filename;
                 
                 // Save to database
@@ -385,5 +385,5 @@ document.getElementById('imageInput')?.addEventListener('change', function(e) {
     }
 });
 </script>
-
+755
 <?php include 'includes/admin_footer.php'; ?>
