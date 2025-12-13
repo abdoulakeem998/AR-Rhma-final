@@ -13,8 +13,8 @@ $admin_base = $base . 'admin/';
 
 // FIXED: Correct upload paths
 $current_dir = dirname(dirname(__FILE__)); // Goes up one level from admin/
-$upload_base_dir = $current_dir . '/uploads/gallery/';
-$upload_url_path = '/uploads/gallery/'; // FIXED: Removed duplicate folder
+$upload_base_dir = '/home/ngoila.karimou/public_html/uploads/AR-Rhma-final/admin/gallery/';
+$upload_url_path = '/~ngoila.karimou/uploads/AR-Rhma-final/admin/gallery/';
 
 // Debug info (you can remove this after it works)
 error_log("Current directory: " . $current_dir);
