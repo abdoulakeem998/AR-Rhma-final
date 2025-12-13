@@ -17,7 +17,7 @@ $base = '/~ngoila.karimou/uploads/AR-Rhma-final/';
 $admin_base = $base . 'admin/';
 
 // CHEMIN SUR LE SERVEUR (OÙ SAUVEGARDER LES FICHIERS)
-$upload_base_dir = '/home/ngoila.karimou/public_html/uploads/AR-Rhma-final/activities/';
+$upload_base_dir = '/~ngoila.karimou/public_html/uploads/AR-Rhma-final/activities/';
 
 // CHEMIN WEB (POUR AFFICHER LES IMAGES)
 $upload_url_path = '/~ngoila.karimou/uploads/AR-Rhma-final/activities/';
