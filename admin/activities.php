@@ -8,22 +8,56 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // ============================================
-// CHEMINS ABSOLUS CORRECTS POUR VOTRE HÉBERGEMENT
+// CHEMINS ABSOLUMENT CORRECTS
 // ============================================
 
-// VOTRE SITE EST À: http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/
-// DONC:
+// 1. VOTRE SITE WEB (URL - pour navigateurs)
 $base = '/~ngoila.karimou/uploads/AR-Rhma-final/';
 $admin_base = $base . 'admin/';
 
-// CHEMIN SUR LE SERVEUR (OÙ SAUVEGARDER LES FICHIERS)
-$upload_base_dir = '/~ngoila.karimou/uploads/AR-Rhma-final/admin/activities/';
+// 2. CHEMINS SERVEUR (disque dur - pour PHP)
+// OPTION 1: Créer un nouveau dossier 'uploaded_images'
+$upload_base_dir = '/home/ngoila.karimou/public_html/uploads/AR-Rhma-final/uploaded_images/';
+$upload_url_path = '/~ngoila.karimou/uploads/AR-Rhma-final/uploaded_images/';
 
-// CHEMIN WEB (POUR AFFICHER LES IMAGES)
-$upload_url_path = '/~ngoila.karimou/uploads/AR-Rhma-final/activities/';
+// OPTION 2: Utiliser 'uploads' (si existe)
+// $upload_base_dir = '/home/ngoila.karimou/public_html/uploads/AR-Rhma-final/uploads/';
+// $upload_url_path = '/~ngoila.karimou/uploads/AR-Rhma-final/uploads/';
 
+// ============================================
+// CRÉATION AUTOMATIQUE DU DOSSIER
+// ============================================
+if (!file_exists($upload_base_dir)) {
+    // Essayer de créer le dossier
+    if (mkdir($upload_base_dir, 0777, true)) {
+        chmod($upload_base_dir, 0777);
+        echo '<div class="alert alert-success">✅ Dossier créé: ' . $upload_base_dir . '</div>';
+    } else {
+        echo '<div class="alert alert-danger">';
+        echo '❌ Impossible de créer le dossier automatiquement.<br>';
+        echo 'Veuillez le créer manuellement:<br>';
+        echo '1. File Manager → <code>/home/ngoila.karimou/public_html/uploads/AR-Rhma-final/</code><br>';
+        echo '2. Créez dossier: <code>uploaded_images</code><br>';
+        echo '3. Permissions: <code>777</code>';
+        echo '</div>';
+        $dir_error = true;
+    }
+}
 
-// Handle delete
+// Vérifier les permissions
+if (file_exists($upload_base_dir) && !is_writable($upload_base_dir)) {
+    // Essayer de changer les permissions
+    if (chmod($upload_base_dir, 0777)) {
+        echo '<div class="alert alert-warning">⚠️ Permissions changées à 777</div>';
+    } else {
+        echo '<div class="alert alert-danger">❌ Dossier non écrivable. Changez permissions à 777</div>';
+        $dir_error = true;
+    }
+}
+
+// ============================================
+// GESTION SUPPRESSION
+// ============================================
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     
@@ -38,9 +72,12 @@ if (isset($_GET['delete'])) {
         if ($stmt->execute([$id])) {
             // Delete image file if exists
             if ($activity && $activity['image_url']) {
-                $full_path = $_SERVER['DOCUMENT_ROOT'] . $activity['image_url'];
-                if (file_exists($full_path)) {
-                    unlink($full_path);
+                // Convertir URL web en chemin serveur
+                $web_path = $activity['image_url'];
+                $server_path = '/home/ngoila.karimou/public_html' . $web_path;
+                
+                if (file_exists($server_path)) {
+                    unlink($server_path);
                 }
             }
             
@@ -53,7 +90,9 @@ if (isset($_GET['delete'])) {
     redirect($admin_base . 'activities.php');
 }
 
-// Handle create/update
+// ============================================
+// GESTION CRÉATION/MODIFICATION
+// ============================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'] ?? 0;
     $title = cleanInput($_POST['title']);
@@ -68,22 +107,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $image_url = '';
     $upload_error = '';
     
-    // IMPROVED: Better image upload handling
+    // GESTION UPLOAD IMAGE
     if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         
-        // Check for upload errors first
+        // Vérifier erreurs d'upload
         if ($_FILES['image']['error'] !== UPLOAD_ERR_OK) {
             $upload_errors = [
-                UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize in php.ini',
-                UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE in form',
-                UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
-                UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
-                UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
-                UPLOAD_ERR_EXTENSION => 'PHP extension stopped the upload'
+                UPLOAD_ERR_INI_SIZE => 'Fichier trop grand (max php.ini)',
+                UPLOAD_ERR_FORM_SIZE => 'Fichier trop grand (max formulaire)',
+                UPLOAD_ERR_PARTIAL => 'Fichier partiellement uploadé',
+                UPLOAD_ERR_NO_TMP_DIR => 'Dossier temporaire manquant',
+                UPLOAD_ERR_CANT_WRITE => 'Impossible d\'écrire sur disque',
+                UPLOAD_ERR_EXTENSION => 'Extension PHP a arrêté l\'upload'
             ];
-            $upload_error = $upload_errors[$_FILES['image']['error']] ?? 'Unknown upload error';
+            $upload_error = $upload_errors[$_FILES['image']['error']] ?? 'Erreur inconnue';
         } else {
-            // Validate file
+            // Validation du fichier
             $file_info = [
                 'name' => $_FILES['image']['name'],
                 'type' => $_FILES['image']['type'],
@@ -91,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'size' => $_FILES['image']['size']
             ];
             
-            // Get actual mime type
+            // Vérifier type MIME réel
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $actual_mime = finfo_file($finfo, $file_info['tmp_name']);
             finfo_close($finfo);
@@ -100,61 +139,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $max_size = 5 * 1024 * 1024; // 5MB
             
             if (!in_array($actual_mime, $allowed_types)) {
-                $upload_error = 'Invalid file type. Only JPG, PNG, and GIF are allowed. Detected type: ' . $actual_mime;
+                $upload_error = 'Type de fichier invalide. Seuls JPG, PNG, GIF sont autorisés. Type détecté: ' . $actual_mime;
             } elseif ($file_info['size'] > $max_size) {
-                $upload_error = 'File too large. Maximum size is 5MB. Your file: ' . round($file_info['size'] / 1024 / 1024, 2) . 'MB';
+                $upload_error = 'Fichier trop volumineux. Maximum: 5MB. Votre fichier: ' . round($file_info['size'] / 1024 / 1024, 2) . 'MB';
             } elseif ($file_info['size'] == 0) {
-                $upload_error = 'File is empty (0 bytes)';
+                $upload_error = 'Fichier vide (0 bytes)';
             } else {
-                // Create unique filename
+                // Créer nom de fichier unique
                 $extension = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
                 $filename = 'activity_' . time() . '_' . uniqid() . '.' . $extension;
+                
+                // CHEMIN SERVEUR pour sauvegarde
                 $filepath = $upload_base_dir . $filename;
                 
-                // Debug info
-                error_log("Attempting upload:");
-                error_log("  Source: " . $file_info['tmp_name']);
-                error_log("  Destination: " . $filepath);
-                error_log("  Directory exists: " . (file_exists($upload_base_dir) ? 'Yes' : 'No'));
-                error_log("  Directory writable: " . (is_writable($upload_base_dir) ? 'Yes' : 'No'));
-                
-                // Attempt upload
+                // Tenter l'upload
                 if (move_uploaded_file($file_info['tmp_name'], $filepath)) {
                     chmod($filepath, 0644);
-                    $image_url = $upload_url_path . $filename; // FIXED: Use correct path
                     
-                    // Delete old image if updating
+                    // CHEMIN WEB pour affichage
+                    $image_url = $upload_url_path . $filename;
+                    
+                    // Supprimer ancienne image si modification
                     if ($id > 0) {
                         $stmt = $pdo->prepare("SELECT image_url FROM activities WHERE id = ?");
                         $stmt->execute([$id]);
                         $old_activity = $stmt->fetch();
                         if ($old_activity && $old_activity['image_url']) {
-                            $old_full_path = $_SERVER['DOCUMENT_ROOT'] . $old_activity['image_url'];
-                            if (file_exists($old_full_path)) {
-                                unlink($old_full_path);
+                            $old_web_path = $old_activity['image_url'];
+                            $old_server_path = '/home/ngoila.karimou/public_html' . $old_web_path;
+                            if (file_exists($old_server_path)) {
+                                unlink($old_server_path);
                             }
                         }
                     }
                 } else {
-                    $upload_error = 'Failed to move uploaded file. Check folder permissions. Path: ' . $filepath;
-                    error_log("Upload failed: " . $upload_error);
+                    $upload_error = 'Impossible de déplacer le fichier. Vérifiez permissions du dossier. Chemin: ' . $filepath;
                 }
             }
         }
     }
     
+    // SAUVEGARDER DANS BASE DE DONNÉES
     if (empty($upload_error)) {
         try {
             if ($id > 0) {
-                // Update
-                $sql = "UPDATE activities SET title=?, description=?, activity_date=?, location=?, beneficiaries=?, category=?, status=?, featured=?" . ($image_url ? ", image_url=?" : "") . " WHERE id=?";
-                $params = $image_url ? [$title, $description, $date, $location, $beneficiaries, $category, $status, $featured, $image_url, $id] : [$title, $description, $date, $location, $beneficiaries, $category, $status, $featured, $id];
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute($params);
+                // Mise à jour
+                if ($image_url) {
+                    $stmt = $pdo->prepare("UPDATE activities SET title=?, description=?, activity_date=?, location=?, beneficiaries=?, category=?, status=?, featured=?, image_url=? WHERE id=?");
+                    $stmt->execute([$title, $description, $date, $location, $beneficiaries, $category, $status, $featured, $image_url, $id]);
+                } else {
+                    $stmt = $pdo->prepare("UPDATE activities SET title=?, description=?, activity_date=?, location=?, beneficiaries=?, category=?, status=?, featured=? WHERE id=?");
+                    $stmt->execute([$title, $description, $date, $location, $beneficiaries, $category, $status, $featured, $id]);
+                }
                 logAdminActivity(getCurrentAdminId(), 'update', 'activity', $id, 'Updated activity');
                 setFlashMessage('success', 'Activity updated successfully');
             } else {
-                // Create
+                // Création
                 $stmt = $pdo->prepare("INSERT INTO activities (title, description, activity_date, location, beneficiaries, image_url, category, status, featured, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([$title, $description, $date, $location, $beneficiaries, $image_url, $category, $status, $featured, getCurrentAdminId()]);
                 logAdminActivity(getCurrentAdminId(), 'create', 'activity', $pdo->lastInsertId(), 'Created activity');
@@ -168,6 +208,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         setFlashMessage('danger', $upload_error);
     }
 }
+
+// ============================================
+// RÉCUPÉRER ACTIVITÉS
+// ============================================
 
 // Get activity for editing
 $edit_activity = null;
@@ -187,26 +231,25 @@ include 'includes/admin_header.php';
 <!-- Display upload directory error if creation failed -->
 <?php if (isset($dir_error)): ?>
 <div class="alert alert-danger">
-    <strong>⚠️ Upload Directory Error!</strong><br>
-    The uploads directory cannot be created automatically. Please create it manually:<br>
+    <strong>⚠️ Erreur Dossier Upload!</strong><br>
+    Le dossier d'upload ne peut pas être créé automatiquement. Créez-le manuellement:<br>
     <code><?php echo $upload_base_dir; ?></code><br><br>
-    <strong>Steps:</strong><br>
-    1. Use your hosting File Manager<br>
-    2. Navigate to: <code><?php echo $current_dir; ?></code><br>
-    3. Create folder: <code>uploads</code><br>
-    4. Inside uploads, create folder: <code>activities</code><br>
-    5. Set permissions to 755
+    <strong>Étapes:</strong><br>
+    1. Utilisez File Manager<br>
+    2. Allez à: <code>/home/ngoila.karimou/public_html/uploads/AR-Rhma-final/</code><br>
+    3. Créez dossier: <code>uploaded_images</code><br>
+    4. Permissions: <code>777</code>
 </div>
 <?php endif; ?>
 
 <!-- Display upload directory info for debugging -->
 <?php if (isset($_GET['debug'])): ?>
 <div class="alert alert-info">
-    <strong>Debug Info:</strong><br>
-    Upload Directory: <?php echo $upload_base_dir; ?><br>
-    Upload URL Path: <?php echo $upload_url_path; ?><br>
-    Directory Exists: <?php echo file_exists($upload_base_dir) ? 'Yes' : 'No'; ?><br>
-    Directory Writable: <?php echo is_writable($upload_base_dir) ? 'Yes' : 'No'; ?><br>
+    <strong>Info Débogage:</strong><br>
+    Dossier Upload Serveur: <?php echo $upload_base_dir; ?><br>
+    URL Upload Web: <?php echo $upload_url_path; ?><br>
+    Dossier Existe: <?php echo file_exists($upload_base_dir) ? 'Oui' : 'Non'; ?><br>
+    Dossier Écrivable: <?php echo is_writable($upload_base_dir) ? 'Oui' : 'Non'; ?><br>
     PHP upload_max_filesize: <?php echo ini_get('upload_max_filesize'); ?><br>
     PHP post_max_size: <?php echo ini_get('post_max_size'); ?>
 </div>
@@ -214,9 +257,9 @@ include 'includes/admin_header.php';
 
 <div class="admin-content">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-calendar-event"></i> Manage Activities</h2>
+        <h2><i class="bi bi-calendar-event"></i> Gérer Activités</h2>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#activityModal">
-            <i class="bi bi-plus-circle"></i> Add New Activity
+            <i class="bi bi-plus-circle"></i> Nouvelle Activité
         </button>
     </div>
 
@@ -229,13 +272,13 @@ include 'includes/admin_header.php';
                     <thead>
                         <tr>
                             <th>Image</th>
-                            <th>Title</th>
+                            <th>Titre</th>
                             <th>Date</th>
-                            <th>Location</th>
-                            <th>Beneficiaries</th>
-                            <th>Category</th>
-                            <th>Status</th>
-                            <th>Featured</th>
+                            <th>Lieu</th>
+                            <th>Bénéficiaires</th>
+                            <th>Catégorie</th>
+                            <th>Statut</th>
+                            <th>En vedette</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -244,7 +287,7 @@ include 'includes/admin_header.php';
                         <tr>
                             <td colspan="9" class="text-center py-4">
                                 <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-                                <p class="text-muted mt-2">No activities yet. Create your first activity!</p>
+                                <p class="text-muted mt-2">Aucune activité. Créez votre première activité!</p>
                             </td>
                         </tr>
                         <?php else: ?>
@@ -284,7 +327,7 @@ include 'includes/admin_header.php';
                                 </a>
                                 <a href="?delete=<?php echo $activity['id']; ?>" 
                                    class="btn btn-sm btn-danger" 
-                                   onclick="return confirm('Are you sure you want to delete this activity?')"
+                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette activité?')"
                                    title="Delete">
                                     <i class="bi bi-trash"></i>
                                 </a>
@@ -299,14 +342,14 @@ include 'includes/admin_header.php';
     </div>
 </div>
 
-<!-- Add/Edit Modal -->
+<!-- Modal Ajouter/Modifier -->
 <div class="modal fade" id="activityModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="bi bi-<?php echo $edit_activity ? 'pencil' : 'plus-circle'; ?>"></i>
-                    <?php echo $edit_activity ? 'Edit' : 'Add New'; ?> Activity
+                    <?php echo $edit_activity ? 'Modifier' : 'Nouvelle'; ?> Activité
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -315,7 +358,7 @@ include 'includes/admin_header.php';
                     <input type="hidden" name="id" value="<?php echo $edit_activity['id'] ?? 0; ?>">
                     
                     <div class="mb-3">
-                        <label class="form-label">Title *</label>
+                        <label class="form-label">Titre *</label>
                         <input type="text" name="title" class="form-control" required 
                                value="<?php echo htmlspecialchars($edit_activity['title'] ?? ''); ?>">
                     </div>
@@ -327,12 +370,12 @@ include 'includes/admin_header.php';
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Activity Date *</label>
+                            <label class="form-label">Date *</label>
                             <input type="date" name="activity_date" class="form-control" required 
                                    value="<?php echo $edit_activity['activity_date'] ?? ''; ?>">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Location *</label>
+                            <label class="form-label">Lieu *</label>
                             <input type="text" name="location" class="form-control" required 
                                    value="<?php echo htmlspecialchars($edit_activity['location'] ?? ''); ?>">
                         </div>
@@ -340,43 +383,43 @@ include 'includes/admin_header.php';
                     
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Beneficiaries</label>
+                            <label class="form-label">Bénéficiaires</label>
                             <input type="number" name="beneficiaries" class="form-control" min="0"
                                    value="<?php echo $edit_activity['beneficiaries'] ?? 0; ?>">
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Category *</label>
+                            <label class="form-label">Catégorie *</label>
                             <select name="category" class="form-control" required>
-                                <option value="orphan_support" <?php echo ($edit_activity['category'] ?? '') === 'orphan_support' ? 'selected' : ''; ?>>Orphan Support</option>
-                                <option value="disability_care" <?php echo ($edit_activity['category'] ?? '') === 'disability_care' ? 'selected' : ''; ?>>Disability Care</option>
-                                <option value="poverty_relief" <?php echo ($edit_activity['category'] ?? '') === 'poverty_relief' ? 'selected' : ''; ?>>Poverty Relief</option>
-                                <option value="education" <?php echo ($edit_activity['category'] ?? '') === 'education' ? 'selected' : ''; ?>>Education</option>
-                                <option value="healthcare" <?php echo ($edit_activity['category'] ?? '') === 'healthcare' ? 'selected' : ''; ?>>Healthcare</option>
-                                <option value="emergency_relief" <?php echo ($edit_activity['category'] ?? '') === 'emergency_relief' ? 'selected' : ''; ?>>Emergency Relief</option>
-                                <option value="other" <?php echo ($edit_activity['category'] ?? '') === 'other' ? 'selected' : ''; ?>>Other</option>
+                                <option value="orphan_support" <?php echo ($edit_activity['category'] ?? '') === 'orphan_support' ? 'selected' : ''; ?>>Soutien Orphelins</option>
+                                <option value="disability_care" <?php echo ($edit_activity['category'] ?? '') === 'disability_care' ? 'selected' : ''; ?>>Soins Handicapés</option>
+                                <option value="poverty_relief" <?php echo ($edit_activity['category'] ?? '') === 'poverty_relief' ? 'selected' : ''; ?>>Lutte Pauvreté</option>
+                                <option value="education" <?php echo ($edit_activity['category'] ?? '') === 'education' ? 'selected' : ''; ?>>Éducation</option>
+                                <option value="healthcare" <?php echo ($edit_activity['category'] ?? '') === 'healthcare' ? 'selected' : ''; ?>>Santé</option>
+                                <option value="emergency_relief" <?php echo ($edit_activity['category'] ?? '') === 'emergency_relief' ? 'selected' : ''; ?>>Urgence</option>
+                                <option value="other" <?php echo ($edit_activity['category'] ?? '') === 'other' ? 'selected' : ''; ?>>Autre</option>
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Status *</label>
+                            <label class="form-label">Statut *</label>
                             <select name="status" class="form-control" required>
                                 <option value="active" <?php echo ($edit_activity['status'] ?? 'active') === 'active' ? 'selected' : ''; ?>>Active</option>
-                                <option value="draft" <?php echo ($edit_activity['status'] ?? '') === 'draft' ? 'selected' : ''; ?>>Draft</option>
-                                <option value="archived" <?php echo ($edit_activity['status'] ?? '') === 'archived' ? 'selected' : ''; ?>>Archived</option>
+                                <option value="draft" <?php echo ($edit_activity['status'] ?? '') === 'draft' ? 'selected' : ''; ?>>Brouillon</option>
+                                <option value="archived" <?php echo ($edit_activity['status'] ?? '') === 'archived' ? 'selected' : ''; ?>>Archivée</option>
                             </select>
                         </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Activity Image</label>
+                        <label class="form-label">Image Activité</label>
                         <?php if ($edit_activity && $edit_activity['image_url']): ?>
                         <div class="mb-2">
                             <img src="<?php echo htmlspecialchars($edit_activity['image_url']); ?>" 
-                                 alt="Current image" style="max-width: 200px; border-radius: 8px;">
-                            <p class="text-muted small mt-1">Current image (upload new to replace)</p>
+                                 alt="Image actuelle" style="max-width: 200px; border-radius: 8px;">
+                            <p class="text-muted small mt-1">Image actuelle (téléchargez nouvelle pour remplacer)</p>
                         </div>
                         <?php endif; ?>
                         <input type="file" name="image" class="form-control" accept="image/*" id="imageInput">
-                        <small class="text-muted">Accepted: JPG, PNG, GIF (Max 5MB)</small>
+                        <small class="text-muted">Types acceptés: JPG, PNG, GIF (Max 5MB)</small>
                         <div id="imagePreview" class="mt-2" style="display: none;">
                             <img src="" alt="Preview" style="max-width: 200px; border-radius: 8px;">
                         </div>
@@ -387,16 +430,16 @@ include 'includes/admin_header.php';
                         <input type="checkbox" name="featured" class="form-check-input" id="featured"
                                <?php echo ($edit_activity['featured'] ?? false) ? 'checked' : ''; ?>>
                         <label class="form-check-label" for="featured">
-                            <i class="bi bi-star"></i> Feature this activity on homepage
+                            <i class="bi bi-star"></i> Mettre en vedette sur page d'accueil
                         </label>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle"></i> Cancel
+                        <i class="bi bi-x-circle"></i> Annuler
                     </button>
                     <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <i class="bi bi-check-circle"></i> Save Activity
+                        <i class="bi bi-check-circle"></i> Sauvegarder
                     </button>
                 </div>
             </form>
@@ -405,26 +448,26 @@ include 'includes/admin_header.php';
 </div>
 
 <script>
-// Enhanced image preview with file info
+// Preview image avec info fichier
 document.getElementById('imageInput')?.addEventListener('change', function(e) {
     const file = e.target.files[0];
     const preview = document.getElementById('imagePreview');
     const info = document.getElementById('uploadInfo');
     
     if (file) {
-        // Display file info
+        // Afficher info fichier
         const sizeInMB = (file.size / 1024 / 1024).toFixed(2);
-        info.innerHTML = `<strong>File:</strong> ${file.name}<br><strong>Size:</strong> ${sizeInMB} MB<br><strong>Type:</strong> ${file.type}`;
+        info.innerHTML = `<strong>Fichier:</strong> ${file.name}<br><strong>Taille:</strong> ${sizeInMB} MB<br><strong>Type:</strong> ${file.type}`;
         
-        // Check file size
+        // Vérifier taille
         if (file.size > 5 * 1024 * 1024) {
-            info.innerHTML += '<br><span class="text-danger">⚠️ File is too large! Max 5MB</span>';
+            info.innerHTML += '<br><span class="text-danger">⚠️ Fichier trop grand! Max 5MB</span>';
             e.target.value = '';
             preview.style.display = 'none';
             return;
         }
         
-        // Show preview
+        // Afficher preview
         const reader = new FileReader();
         reader.onload = function(e) {
             preview.querySelector('img').src = e.target.result;
@@ -437,14 +480,14 @@ document.getElementById('imageInput')?.addEventListener('change', function(e) {
     }
 });
 
-// Prevent double submission
+// Empêcher double soumission
 document.getElementById('activityForm')?.addEventListener('submit', function(e) {
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sauvegarde...';
 });
 
-// Auto-open modal if editing
+// Ouvrir modal si édition
 <?php if ($edit_activity): ?>
 document.addEventListener('DOMContentLoaded', function() {
     new bootstrap.Modal(document.getElementById('activityModal')).show();
