@@ -56,9 +56,9 @@ $pagination = paginate($total_items, $items_per_page, $current_page);
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card activity-card h-100 animate-card" data-index="<?php echo $index; ?>">
                         <div class="activity-image-wrapper">
-                            <img src="<?php echo htmlspecialchars($activity['image_url'] ?? 'assets/images/placeholder.jpg'); ?>" 
+                            <img src="<?php echo htmlspecialchars($activity['image_url'] ?? 'assets/images/m3.jpg'); ?>" 
                                  class="card-img-top activity-image" alt="<?php echo htmlspecialchars($activity['title']); ?>"
-                                 onerror="this.src='assets/images/placeholder.jpg'">
+                                 onerror="this.src='assets/images/m2.jpg'">
                         </div>
                         <div class="card-body">
                             <small class="activity-date text-muted">
