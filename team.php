@@ -14,11 +14,22 @@ $team_members = $stmt->fetchAll();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Ensure background image shows */
+        .hero-team {
+            background: linear-gradient(rgba(44, 95, 45, 0.85), rgba(26, 58, 27, 0.9)), 
+                        url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1920&h=600&fit=crop&q=80') center/cover !important;
+            background-size: cover !important;
+            background-position: center !important;
+            min-height: 500px;
+            position: relative;
+        }
+    </style>
 </head>
 <body>
     <?php include 'includes/header.php'; ?>
 
-    <!-- Hero Section -->
+    <!-- Hero Section with Background Image -->
     <section class="hero-section hero-team">
         <div class="hero-overlay"></div>
         <div class="container text-center hero-content">

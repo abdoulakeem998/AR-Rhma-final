@@ -422,6 +422,15 @@ p {
     animation: fadeInUp 1s ease-out 0.6s both;
 }
 
+.hero-team {
+    background: linear-gradient(rgba(44, 95, 45, 0.85), rgba(26, 58, 27, 0.9)), 
+                url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1920&h=600&fit=crop&q=80') center/cover !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    min-height: 500px;
+}
+
 /* ============================================
    HERO - HOME PAGE
    ============================================ */
