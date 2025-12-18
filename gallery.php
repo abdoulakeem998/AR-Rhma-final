@@ -145,14 +145,18 @@ $images = $stmt->fetchAll();
         
         .gallery-overlay {
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             right: 0;
+            bottom: 0;
             background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
             color: white;
             padding: 1rem;
             opacity: 0;
             transition: opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
         }
         
         .gallery-item:hover .gallery-overlay {
@@ -164,6 +168,54 @@ $images = $stmt->fetchAll();
             font-weight: 600;
             margin: 0;
             font-size: 0.9rem;
+        }
+        
+        /* Gallery Actions */
+        .gallery-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+        
+        .gallery-item:hover .gallery-actions {
+            opacity: 1;
+        }
+        
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2C5F2D;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .action-btn:hover {
+            background: #2C5F2D;
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .download-btn {
+            background: rgba(255, 255, 255, 0.9);
+            color: #2C5F2D;
+        }
+        
+        .download-btn:hover {
+            background: #2C5F2D;
+            color: white;
         }
         
         .gallery-icon {
@@ -235,15 +287,57 @@ $images = $stmt->fetchAll();
         .modal-header {
             background: linear-gradient(135deg, rgba(44, 95, 45, 0.9) 0%, rgba(33, 82, 39, 0.9) 100%);
             border-bottom: none;
+            padding: 1rem 1.5rem;
         }
         
         .modal-title {
             color: white;
             font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .modal-download-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-download-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            transform: translateY(-2px);
         }
         
         .btn-close-white {
             filter: brightness(0) invert(1);
+        }
+        
+        .modal-body {
+            padding: 0;
+        }
+        
+        .modal-image-wrapper {
+            position: relative;
+        }
+        
+        .modal-image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
         }
         
         /* Scroll Indicator */
@@ -293,6 +387,12 @@ $images = $stmt->fetchAll();
                 padding: 1rem;
                 margin: 1rem 0;
             }
+            
+            .action-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
         }
         
         @media (max-width: 576px) {
@@ -303,6 +403,43 @@ $images = $stmt->fetchAll();
             .hero-section {
                 padding: 3rem 0;
             }
+            
+            .modal-download-btn {
+                padding: 4px 10px;
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Download Toast */
+        .download-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2C5F2D;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .download-toast i {
+            font-size: 1.2rem;
         }
     </style>
 </head>
@@ -334,14 +471,32 @@ $images = $stmt->fetchAll();
                 </div>
             <?php else: ?>
                 <div class="row g-4">
-                    <?php foreach ($images as $index => $image): ?>
+                    <?php foreach ($images as $index => $image): 
+                        $filename = basename($image['image_url']);
+                        $cleanTitle = preg_replace('/[^a-z0-9]/i', '-', strtolower($image['title']));
+                        $downloadName = $cleanTitle . '-' . $filename;
+                    ?>
                     <div class="col-lg-3 col-md-4 col-sm-6">
                         <div class="gallery-item" 
                              data-bs-toggle="modal" 
                              data-bs-target="#imageModal"
                              data-image="<?php echo htmlspecialchars($image['image_url']); ?>"
                              data-title="<?php echo htmlspecialchars($image['title']); ?>"
-                             data-index="<?php echo $index; ?>">
+                             data-index="<?php echo $index; ?>"
+                             data-download-url="<?php echo htmlspecialchars($image['image_url']); ?>"
+                             data-download-name="<?php echo htmlspecialchars($downloadName); ?>">
+                            
+                            <!-- Download button on gallery item -->
+                            <div class="gallery-actions">
+                                <a href="<?php echo htmlspecialchars($image['image_url']); ?>" 
+                                   class="action-btn download-btn" 
+                                   download="<?php echo htmlspecialchars($downloadName); ?>"
+                                   title="Download this image"
+                                   onclick="downloadImage(event, '<?php echo htmlspecialchars($image['title']); ?>')">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            </div>
+                            
                             <img src="<?php echo htmlspecialchars($image['image_url']); ?>" 
                                  alt="<?php echo htmlspecialchars($image['title']); ?>"
                                  loading="lazy">
@@ -373,10 +528,17 @@ $images = $stmt->fetchAll();
             <div class="modal-content">
                 <div class="modal-header border-0">
                     <h5 class="modal-title" id="modalImageTitle"></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-actions">
+                        <a href="#" id="modalDownloadBtn" class="modal-download-btn" download>
+                            <i class="bi bi-download"></i> Download
+                        </a>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
                 </div>
                 <div class="modal-body">
-                    <img id="modalImage" src="" alt="" class="img-fluid">
+                    <div class="modal-image-wrapper">
+                        <img id="modalImage" src="" alt="" class="img-fluid">
+                    </div>
                 </div>
             </div>
         </div>
@@ -395,13 +557,25 @@ $images = $stmt->fetchAll();
                     const button = event.relatedTarget;
                     const imageUrl = button.getAttribute('data-image');
                     const imageTitle = button.getAttribute('data-title');
+                    const downloadUrl = button.getAttribute('data-download-url');
+                    const downloadName = button.getAttribute('data-download-name');
                     
                     const modalImage = document.getElementById('modalImage');
                     const modalTitle = document.getElementById('modalImageTitle');
+                    const modalDownloadBtn = document.getElementById('modalDownloadBtn');
                     
                     modalImage.src = imageUrl;
                     modalImage.alt = imageTitle;
                     modalTitle.textContent = imageTitle;
+                    
+                    // Set download attributes
+                    modalDownloadBtn.href = downloadUrl;
+                    modalDownloadBtn.download = downloadName;
+                    
+                    // Update modal download button click handler
+                    modalDownloadBtn.onclick = function(e) {
+                        downloadImage(e, imageTitle, downloadUrl, downloadName);
+                    };
                 });
             }
             
@@ -505,11 +679,116 @@ $images = $stmt->fetchAll();
             });
         }
 
-        // Add CSS for floating elements animation if not already present
-        if (!document.querySelector('style[data-floating-animation]')) {
+        // Download image function
+        function downloadImage(event, title, url = null, filename = null) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const downloadUrl = url || event.currentTarget.href;
+            const downloadName = filename || event.currentTarget.download || 
+                                generateFilename(title, downloadUrl);
+            
+            try {
+                // Create a temporary link element
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = downloadName;
+                link.style.display = 'none';
+                
+                // Append to body, click, and remove
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Show download toast
+                showDownloadToast(title);
+                
+                // Track download (optional - for analytics)
+                trackDownload(title, downloadUrl);
+                
+            } catch (error) {
+                console.error('Download failed:', error);
+                alert('Sorry, could not download the image. Please try right-clicking and selecting "Save image as..."');
+            }
+            
+            return false;
+        }
+        
+        function generateFilename(title, url) {
+            // Clean title for filename
+            const cleanTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+            
+            // Extract extension from URL
+            const urlParts = url.split('/');
+            const lastPart = urlParts[urlParts.length - 1];
+            const extension = lastPart.includes('.') ? lastPart.split('.').pop() : 'jpg';
+            
+            return `${cleanTitle}-${Date.now()}.${extension}`;
+        }
+        
+        function showDownloadToast(title) {
+            // Remove existing toast
+            const existingToast = document.querySelector('.download-toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+            
+            // Create toast
+            const toast = document.createElement('div');
+            toast.className = 'download-toast';
+            toast.innerHTML = `
+                <i class="bi bi-check-circle"></i>
+                <div>
+                    <strong>Download started!</strong>
+                    <div style="font-size: 0.85rem;">"${title.substring(0, 30)}${title.length > 30 ? '...' : ''}"</div>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Track download function (for analytics - optional)
+        function trackDownload(title, url) {
+            // You can implement Google Analytics or your own tracking here
+            console.log('Download tracked:', { title, url, timestamp: new Date().toISOString() });
+            
+            // Example: Send to your server for tracking
+            /*
+            fetch('track_download.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: title,
+                    url: url,
+                    userAgent: navigator.userAgent,
+                    timestamp: new Date().toISOString()
+                })
+            });
+            */
+        }
+        
+        // Add slideOut animation
+        if (!document.querySelector('style[data-slideout-animation]')) {
             const style = document.createElement('style');
-            style.setAttribute('data-floating-animation', '');
+            style.setAttribute('data-slideout-animation', '');
             style.textContent = `
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+                
                 @keyframes floatingElements {
                     0%, 100% {
                         transform: translateY(0) translateX(0) rotate(0deg);
