@@ -1935,11 +1935,10 @@ p {
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 2rem;
     margin-top: 2rem;
-    width: 400%;
-    color: var(--danger-color);
+    
 }
 
-@media (max-width: 768px) {
+@media (max-width: 400%) {
     .activities-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
