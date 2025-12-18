@@ -1114,7 +1114,9 @@ p {
 /* Contact Info Box */
 .contact-info-box {
     
-    color: white;
+    background: linear-gradient(135deg, 
+        rgba(44, 95, 45, 0.05) 0%, 
+        rgba(212, 175, 55, 0.05) 100%);
     border-radius: 25px;
     padding: 3rem;
     margin-top: 3rem;
