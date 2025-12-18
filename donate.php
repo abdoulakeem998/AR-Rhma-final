@@ -11,6 +11,97 @@ require_once 'includes/functions.php';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Additional sparkle animation */
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            animation: sparkle 2s linear infinite;
+            opacity: 0;
+        }
+        
+        /* Copy button styling */
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: #D4AF37;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+            transform: scale(1.1);
+        }
+        
+        .copy-btn.copied {
+            color: #28a745;
+            animation: bounce 0.5s ease;
+        }
+        
+        /* Counter animation */
+        .counter {
+            display: inline-block;
+            animation: counterPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes counterPulse {
+            0%, 100% {
+                transform: scale(1);
+                color: #2C5F2D;
+            }
+            50% {
+                transform: scale(1.05);
+                color: #FF6B6B;
+            }
+        }
+        
+        /* Progress bar animation */
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #2C5F2D, #D4AF37);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: progressShimmer 2s infinite;
+        }
+        
+        @keyframes progressShimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+    </style>
 </head>
 <body>  
     <?php include 'includes/header.php'; ?>
@@ -46,7 +137,7 @@ require_once 'includes/functions.php';
     </section>
 
     <!-- Main Donation Content -->
-    <section class="section bg-light-gradient">
+    <section class="section" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-10 col-xl-9">
@@ -181,7 +272,7 @@ require_once 'includes/functions.php';
                             <div class="mt-5 p-4 bg-light rounded-3">
                                 <h5 class="mb-3">Monthly Donation Goal</h5>
                                 <div class="progress mb-2">
-                                    <div class="progress-bar" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar" style="width: 75%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
                                         <span class="visually-hidden">75% Complete</span>
                                     </div>
                                 </div>
@@ -206,7 +297,7 @@ require_once 'includes/functions.php';
                             </div>
 
                             <!-- Contact Information -->
-                            <div class="contact-info-box subtle">
+                            <div class="contact-info-box" style="background: linear-gradient(135deg,rgba(44, 95, 45, 0.05) 0%, rgba(212, 175, 55, 0.05) 100%); !important;">
                                 <h4 class="mb-4">
                                     <i class="bi bi-envelope-heart"></i> Contact Us for Confirmation
                                 </h4>
@@ -520,6 +611,33 @@ require_once 'includes/functions.php';
             }, 3000);
         }
         
+        // Add fadeOut animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+            }
+            
+            .testimonial-card {
+                transition: all 0.3s ease;
+                border: none;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            }
+            
+            .testimonial-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            }
+        `;
+        document.head.appendChild(style);
+        
         // Initialize animations on load
         document.addEventListener('DOMContentLoaded', function() {
             createParticles();
@@ -565,6 +683,18 @@ require_once 'includes/functions.php';
                     ripple.remove();
                 }, 600);
             });
+            
+            // Add ripple animation
+            const rippleStyle = document.createElement('style');
+            rippleStyle.textContent = `
+                @keyframes ripple {
+                    to {
+                        transform: scale(4);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(rippleStyle);
             
             // Animate progress bar
             const progressBar = document.querySelector('.progress-bar');
