@@ -15,7 +15,7 @@ if (!$role) {
 
 if (hasApplied(getCurrentUserId(), $role_id)) {
     setFlashMessage('warning', 'You have already applied for this position.');
-    redirect('/AR-Rhma-final/my_applications.php');
+    redirect('/~ngoila.karimou/uploads/AR-Rhma-final/my_applications.php');
 }
 
 $errors = [];
