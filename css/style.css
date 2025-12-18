@@ -1114,9 +1114,9 @@ p {
 /* Contact Info Box */
 .contact-info-box {
     background: linear-gradient(135deg, 
-        #667eea 0%, 
-        #764ba2 50%, 
-        #667eea 100%);
+        #a7b1e0 0%, 
+        #b4a3c5 50%, 
+        #848bac 100%);
     color: white;
     border-radius: 25px;
     padding: 3rem;
@@ -1365,7 +1365,7 @@ p {
 }
 
 /* ============================================
-   EXISTING STYLES CONTINUED...
+   STYLES 
    ============================================ */
 
 /* HEADER & NAVIGATION */

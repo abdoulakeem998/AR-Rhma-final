@@ -742,5 +742,3 @@ require_once 'includes/functions.php';
     </script>
 </body>
 </html>
-
-header
