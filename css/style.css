@@ -1111,12 +1111,13 @@ p {
     margin-bottom: 0;
 }
 
-/* Contact Info Box */
+/* Contact Info Box - Gold Green Option */
 .contact-info-box {
-    
     background: linear-gradient(135deg, 
-        rgba(44, 95, 45, 0.05) 0%, 
-        rgba(212, 175, 55, 0.05) 100%);
+        #D4AF37 0%, 
+        #2C5F2D 50%, 
+        #D4AF37 100%);
+    color: white;
     border-radius: 25px;
     padding: 3rem;
     margin-top: 3rem;
@@ -1127,7 +1128,6 @@ p {
     background-size: 200% 200%;
     animation: gradientShift 5s ease infinite;
 }
-
 .contact-info-box::before {
     content: '';
     position: absolute;
