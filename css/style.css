@@ -1112,22 +1112,7 @@ p {
 }
 
 /* Contact Info Box - Gold Green Option */
-.contact-info-box {
-    background: linear-gradient(135deg, 
-        #D4AF37 0%, 
-        #2C5F2D 50%, 
-        #D4AF37 100%);
-    color: white;
-    border-radius: 25px;
-    padding: 3rem;
-    margin-top: 3rem;
-    text-align: center;
-    animation: fadeInUp 1s ease-out 1.2s both;
-    position: relative;
-    overflow: hidden;
-    background-size: 200% 200%;
-    animation: gradientShift 5s ease infinite;
-}
+
 .contact-info-box::before {
     content: '';
     position: absolute;
