@@ -25,6 +25,23 @@ $images = $stmt->fetchAll();
             min-height: 100vh;
             background-color: #f8f9fa;
         }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            z-index: -1;
+        }
+        
+        .section, .hero-section {
+            position: relative;
+            z-index: 1;
+        }
+        
         /* Floating decorative elements */
         .floating-elements {
             position: fixed;
@@ -52,12 +69,240 @@ $images = $stmt->fetchAll();
         .gallery-section-bg {
             position: relative;
             z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
         /* Ensure content is above background elements */
         .container, .hero-content, .section {
             position: relative;
             z-index: 2;
+        }
+        
+        /* Gallery Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, rgba(44, 95, 45, 0.8) 0%, rgba(33, 82, 39, 0.8) 100%);
+            color: white;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 4rem 0;
+        }
+        
+        .hero-section h1 {
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+            font-size: 3rem;
+        }
+        
+        .hero-section .lead {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .hero-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: bounce 3s ease-in-out infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* Gallery Items */
+        .gallery-item {
+            border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.9);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            height: 250px;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        
+        .gallery-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            color: white;
+            padding: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+        }
+        
+        .gallery-title {
+            color: white;
+            font-weight: 600;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        .gallery-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 2rem;
+            opacity: 0;
+            transition: all 0.3s ease;
+            background: rgba(44, 95, 45, 0.8);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .gallery-item:hover .gallery-icon {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        
+        /* Image Count */
+        .gallery-count {
+            background-color: #2C5F2D;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 2rem;
+        }
+        
+        .gallery-count i {
+            margin-right: 8px;
+        }
+        
+        .gallery-count span {
+            font-weight: 700;
+        }
+        
+        /* Empty State */
+        .gallery-empty-state {
+            padding: 4rem 1rem;
+        }
+        
+        .gallery-empty-state i {
+            font-size: 5rem;
+            color: #2C5F2D;
+            opacity: 0.3;
+        }
+        
+        .gallery-empty-state h3 {
+            color: #2C5F2D;
+            font-weight: 600;
+            margin: 1rem 0;
+        }
+        
+        /* Modal Styles */
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, rgba(44, 95, 45, 0.9) 0%, rgba(33, 82, 39, 0.9) 100%);
+            border-bottom: none;
+        }
+        
+        .modal-title {
+            color: white;
+            font-weight: 600;
+        }
+        
+        .btn-close-white {
+            filter: brightness(0) invert(1);
+        }
+        
+        /* Scroll Indicator */
+        .scroll-indicator {
+            animation: bounce 2s infinite;
+            margin-top: 2rem;
+            cursor: pointer;
+        }
+        
+        .scroll-indicator i {
+            font-size: 2rem;
+            color: white;
+        }
+        
+        /* Button Styles */
+        .btn-primary {
+            background-color: #2C5F2D;
+            border-color: #2C5F2D;
+            padding: 8px 20px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e3c1e;
+            border-color: #1e3c1e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 95, 45, 0.3);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+            
+            .hero-icon {
+                font-size: 3rem;
+            }
+            
+            .gallery-item {
+                height: 200px;
+            }
+            
+            .gallery-section-bg {
+                padding: 1rem;
+                margin: 1rem 0;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .gallery-item {
+                height: 180px;
+            }
+            
+            .hero-section {
+                padding: 3rem 0;
+            }
         }
     </style>
 </head>
@@ -66,7 +311,6 @@ $images = $stmt->fetchAll();
 
     <!-- Hero Section -->
     <section class="hero-section hero-gallery">
-        <div class="hero-overlay"></div>
         <div class="container text-center hero-content">
             <div class="hero-icon">
                 <i class="bi bi-images"></i>
@@ -111,11 +355,13 @@ $images = $stmt->fetchAll();
                 </div>
                 
                 <!-- Image Count -->
-                <div class="text-center mt-4 gallery-count">
-                    <p class="text-muted">
-                        <i class="bi bi-images"></i> 
-                        Showing <span><?php echo count($images); ?></span> photos
-                    </p>
+                <div class="text-center mt-4">
+                    <div class="gallery-count">
+                        <p class="mb-0">
+                            <i class="bi bi-images"></i> 
+                            Showing <span><?php echo count($images); ?></span> photos
+                        </p>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
@@ -126,7 +372,7 @@ $images = $stmt->fetchAll();
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header border-0">
-                    <h5 class="modal-title text-white" id="modalImageTitle"></h5>
+                    <h5 class="modal-title" id="modalImageTitle"></h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -229,7 +475,8 @@ $images = $stmt->fetchAll();
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
                         entry.target.style.animationDelay = `${entry.target.dataset.index * 0.05}s`;
                     }
                 });
@@ -239,6 +486,9 @@ $images = $stmt->fetchAll();
             });
             
             galleryItems.forEach((item) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
                 observer.observe(item);
             });
         }
@@ -273,6 +523,29 @@ $images = $stmt->fetchAll();
                     75% {
                         transform: translateY(40px) translateX(10px) rotate(270deg);
                     }
+                }
+                
+                @keyframes floatParticle {
+                    0% {
+                        transform: translateY(100vh) rotate(0deg);
+                        opacity: 0;
+                    }
+                    10% {
+                        opacity: 0.5;
+                    }
+                    90% {
+                        opacity: 0.5;
+                    }
+                    100% {
+                        transform: translateY(-100px) rotate(360deg);
+                        opacity: 0;
+                    }
+                }
+                
+                .particle {
+                    position: absolute;
+                    border-radius: 50%;
+                    animation: floatParticle 20s linear infinite;
                 }
             `;
             document.head.appendChild(style);
