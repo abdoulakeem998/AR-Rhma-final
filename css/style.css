@@ -402,8 +402,191 @@ p {
 }
 
 /* ============================================
-   ANIMATION CLASSES
+   DONATION PAGE - SPECIAL ENHANCEMENTS
    ============================================ */
+
+/* Animated Background for Donate Page */
+@keyframes heroReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes widthGrow {
+    0% {
+        width: 0;
+        opacity: 0;
+    }
+    100% {
+        width: 100px;
+        opacity: 1;
+    }
+}
+
+@keyframes arabicReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+        filter: blur(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes rotateIn {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.2);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+@keyframes cardReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(50px) rotateX(-10deg);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) rotateX(0);
+        box-shadow: 0 30px 80px rgba(44, 95, 45, 0.25);
+    }
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 0% 0;
+    }
+    100% {
+        background-position: 300% 0;
+    }
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes starPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+}
+
+@keyframes checkBounce {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-5px) scale(1.1);
+    }
+}
+
+@keyframes textGlow {
+    0%, 100% {
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+    50% {
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5),
+                     0 0 20px rgba(255, 215, 0, 0.3),
+                     0 0 30px rgba(255, 215, 0, 0.2);
+    }
+}
+
+@keyframes iconFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    33% {
+        transform: translateY(-10px) rotate(5deg);
+    }
+    66% {
+        transform: translateY(5px) rotate(-5deg);
+    }
+}
+
+@keyframes floatParticle {
+    0% {
+        transform: translateY(100vh) rotate(0deg) scale(0.5);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.3;
+    }
+    90% {
+        opacity: 0.3;
+    }
+    100% {
+        transform: translateY(-100px) rotate(720deg) scale(1);
+        opacity: 0;
+    }
+}
+
+@keyframes sparkle {
+    0%, 100% { 
+        opacity: 0; 
+        transform: scale(0) rotate(0deg); 
+    }
+    50% { 
+        opacity: 1; 
+        transform: scale(1) rotate(180deg); 
+    }
+}
+
+@keyframes fadeInRight {
+    0% {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes floatingHeart {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+    }
+    50% {
+        transform: translateY(-20px) rotate(5deg);
+        filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4));
+    }
+}
+
+/* ANIMATION CLASSES */
 .animate-fade-up {
     animation: fadeInUp 0.8s ease-out both;
 }
@@ -451,8 +634,741 @@ p {
 .animate-stat[data-delay="400"] { animation-delay: 0.6s; }
 
 /* ============================================
-   HEADER & NAVIGATION
+   DONATION PAGE SPECIFIC STYLES
    ============================================ */
+.donate-hero {
+    background: linear-gradient(rgba(44, 95, 45, 0.92), rgba(26, 58, 27, 0.95)), 
+                url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1920&h=600&fit=crop&q=80');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    padding: 6rem 0;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    animation: heroReveal 1.2s ease-out;
+}
+
+.donate-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(232, 73, 29, 0.15) 0%, transparent 50%),
+        repeating-linear-gradient(45deg, transparent, transparent 100px, 
+            rgba(255, 255, 255, 0.05) 100px, 
+            rgba(255, 255, 255, 0.05) 101px);
+    animation: pulse 15s ease-in-out infinite;
+    z-index: 1;
+}
+
+.donate-hero .hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Floating Heart Animation */
+.floating-heart {
+    animation: floatingHeart 3s ease-in-out infinite;
+    display: inline-block;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+}
+
+.floating-heart i {
+    font-size: 5rem;
+    color: #FF6B6B;
+    background: linear-gradient(45deg, #FF6B6B, #FFD93D);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: heartBeat 2s ease-in-out infinite;
+}
+
+/* Enhanced Hero Title */
+.donate-hero .hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    text-shadow: 3px 3px 15px rgba(0,0,0,0.5);
+    animation: fadeInDown 1s ease-out 0.3s both;
+    background: linear-gradient(135deg, #FFFFFF, #FFD700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 1px;
+    position: relative;
+    display: inline-block;
+}
+
+.donate-hero .hero-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 4px;
+    background: linear-gradient(90deg, #FF6B6B, #FFD700);
+    border-radius: 2px;
+    animation: widthGrow 1s ease-out 1.2s both;
+}
+
+/* Beautiful Arabic Text Animation */
+.arabic-text {
+    font-size: 2rem;
+    font-family: 'Traditional Arabic', 'Times New Roman', serif;
+    line-height: 2.5;
+    margin: 2rem 0;
+    color: #FFD700;
+    font-weight: 700;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+    position: relative;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    animation: arabicReveal 1.5s ease-out 0.6s both;
+}
+
+.arabic-text::before,
+.arabic-text::after {
+    content: '❁';
+    position: absolute;
+    font-size: 2rem;
+    color: #FFD700;
+    opacity: 0.5;
+    animation: rotateIn 3s linear infinite;
+}
+
+.arabic-text::before {
+    top: 10px;
+    left: 20px;
+}
+
+.arabic-text::after {
+    bottom: 10px;
+    right: 20px;
+    animation-delay: 1.5s;
+}
+
+/* English Translation Styling */
+.english-translation {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem auto;
+    max-width: 800px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    animation: fadeInUp 1s ease-out 0.9s both;
+}
+
+.english-translation p {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1.2rem;
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.english-translation p::before {
+    content: '❝';
+    position: absolute;
+    left: 0;
+    top: -5px;
+    color: #FFD700;
+    font-size: 1.5rem;
+    opacity: 0.8;
+}
+
+.hadith-reference {
+    color: rgba(255, 215, 0, 0.9);
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 1.5rem;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Enhanced Donation Card */
+.donation-card {
+    animation: cardReveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    border: none;
+    border-radius: 25px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    box-shadow: 
+        0 20px 60px rgba(44, 95, 45, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    position: relative;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+}
+
+.donation-card:hover {
+    transform: translateY(-10px) rotateX(5deg);
+    box-shadow: 
+        0 40px 100px rgba(44, 95, 45, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Beautiful Card Header */
+.card-header-custom {
+    background: linear-gradient(135deg, 
+        #2C5F2D 0%, 
+        #1a3a1b 30%, 
+        #2C5F2D 100%);
+    color: white;
+    padding: 3rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-header-custom::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
+
+.card-header-custom i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    display: inline-block;
+    animation: heartBeat 2s ease-in-out infinite;
+    background: linear-gradient(45deg, #FFD700, #FF6B6B);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+}
+
+.card-header-custom h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.card-header-custom p {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    position: relative;
+    z-index: 1;
+}
+
+/* Bank Details Box */
+.bank-details-box {
+    background: linear-gradient(135deg, 
+        rgba(248, 249, 250, 0.95) 0%, 
+        rgba(233, 236, 239, 0.95) 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin: 2rem 0;
+    border-left: 6px solid #D4AF37;
+    animation: slideInLeft 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.bank-details-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, 
+        #2C5F2D, #D4AF37, #E8491D, #2C5F2D);
+    background-size: 300% 100%;
+    animation: shimmer 3s linear infinite;
+}
+
+.bank-details-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.detail-item {
+    padding: 1.2rem 0;
+    border-bottom: 2px dashed rgba(44, 95, 45, 0.1);
+    display: flex;
+    align-items: center;
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+.detail-item:nth-child(1) { animation-delay: 0.5s; }
+.detail-item:nth-child(2) { animation-delay: 0.6s; }
+.detail-item:nth-child(3) { animation-delay: 0.7s; }
+.detail-item:nth-child(4) { animation-delay: 0.8s; }
+.detail-item:nth-child(5) { animation-delay: 0.9s; }
+
+.detail-label {
+    color: #2C5F2D;
+    font-weight: 800;
+    font-size: 1.2rem;
+    min-width: 180px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.detail-label::before {
+    content: '✓';
+    background: #2C5F2D;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.detail-value {
+    color: #1a1a1a;
+    font-size: 1.3rem;
+    font-weight: 600;
+    flex: 1;
+    padding-left: 1rem;
+    position: relative;
+}
+
+.detail-value::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: #D4AF37;
+    font-size: 1.5rem;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Mobile Money Cards */
+.mobile-money-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 2px solid rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    animation: scaleIn 0.6s ease-out 0.8s both;
+}
+
+.mobile-money-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0) 100%);
+    z-index: 1;
+}
+
+.mobile-money-card:hover {
+    transform: translateY(-15px) scale(1.05);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+    border-color: transparent;
+}
+
+.mobile-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    display: inline-block;
+    animation: bounce 2s infinite;
+    position: relative;
+    z-index: 2;
+}
+
+.orange-money {
+    border-top: 6px solid #FF6600;
+    background: linear-gradient(135deg, 
+        rgba(255, 102, 0, 0.05) 0%, 
+        rgba(255, 102, 0, 0.02) 100%);
+}
+
+.moov-money {
+    border-top: 6px solid #00A0E3;
+    background: linear-gradient(135deg, 
+        rgba(0, 160, 227, 0.05) 0%, 
+        rgba(0, 160, 227, 0.02) 100%);
+}
+
+.orange-money .mobile-icon {
+    color: #FF6600;
+    background: linear-gradient(45deg, #FF6600, #FF8C42);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.moov-money .mobile-icon {
+    color: #00A0E3;
+    background: linear-gradient(45deg, #00A0E3, #2DD5FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.mobile-provider {
+    color: inherit;
+    font-weight: 800;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+.orange-money .mobile-provider {
+    color: #FF6600;
+}
+
+.moov-money .mobile-provider {
+    color: #00A0E3;
+}
+
+.mobile-number {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    display: inline-block;
+    animation: pulse 3s ease-in-out infinite;
+}
+
+/* Important Note Box */
+.note-box {
+    background: linear-gradient(135deg, 
+        rgba(255, 243, 205, 0.95) 0%, 
+        rgba(255, 234, 167, 0.95) 100%);
+    border-left: 6px solid #FFC107;
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin: 3rem 0;
+    animation: scaleIn 0.8s ease-out 1s both;
+    position: relative;
+    overflow: hidden;
+}
+
+.note-box::before {
+    content: '⚠️';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    font-size: 8rem;
+    opacity: 0.1;
+    transform: rotate(15deg);
+}
+
+.note-icon {
+    font-size: 2.5rem;
+    color: #FF6B00;
+    animation: swing 2s ease-in-out infinite;
+    margin-right: 1.5rem;
+}
+
+.note-title {
+    color: #856404;
+    font-weight: 800;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+}
+
+.note-text {
+    color: #856404;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 0;
+}
+
+/* Contact Info Box */
+.contact-info-box {
+    background: linear-gradient(135deg, 
+        #667eea 0%, 
+        #764ba2 50%, 
+        #667eea 100%);
+    color: white;
+    border-radius: 25px;
+    padding: 3rem;
+    margin-top: 3rem;
+    text-align: center;
+    animation: fadeInUp 1s ease-out 1.2s both;
+    position: relative;
+    overflow: hidden;
+    background-size: 200% 200%;
+    animation: gradientShift 5s ease infinite;
+}
+
+.contact-info-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
+    opacity: 0.3;
+}
+
+.contact-info-box h4 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.contact-info-box h4 i {
+    animation: spin 3s linear infinite;
+}
+
+.contact-item {
+    margin: 1.2rem 0;
+    font-size: 1.2rem;
+    position: relative;
+    z-index: 1;
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+.contact-item:nth-child(1) { animation-delay: 1.4s; }
+.contact-item:nth-child(2) { animation-delay: 1.5s; }
+.contact-item:nth-child(3) { animation-delay: 1.6s; }
+
+.contact-item i {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Impact Section */
+.impact-section {
+    background: linear-gradient(135deg, 
+        rgba(44, 95, 45, 0.05) 0%, 
+        rgba(212, 175, 55, 0.05) 100%);
+    border-radius: 25px;
+    padding: 3rem;
+    margin-top: 3rem;
+    animation: fadeInUp 1s ease-out 1.4s both;
+    position: relative;
+    overflow: hidden;
+}
+
+.impact-section h4 {
+    color: #2C5F2D;
+    font-size: 2rem;
+    margin-bottom: 2.5rem;
+    text-align: center;
+    position: relative;
+}
+
+.impact-section h4 i {
+    animation: starPulse 2s ease-in-out infinite;
+}
+
+.impact-item {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    background: white;
+    border-radius: 15px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    opacity: 0;
+    animation: fadeInRight 0.6s ease-out forwards;
+}
+
+.impact-item:nth-child(1) { animation-delay: 1.6s; }
+.impact-item:nth-child(2) { animation-delay: 1.7s; }
+.impact-item:nth-child(3) { animation-delay: 1.8s; }
+.impact-item:nth-child(4) { animation-delay: 1.9s; }
+.impact-item:nth-child(5) { animation-delay: 2.0s; }
+.impact-item:nth-child(6) { animation-delay: 2.1s; }
+
+.impact-item:hover {
+    transform: translateX(20px) scale(1.05);
+    box-shadow: 0 15px 40px rgba(44, 95, 45, 0.2);
+    background: linear-gradient(135deg, 
+        rgba(44, 95, 45, 0.05) 0%, 
+        white 100%);
+}
+
+.impact-item i {
+    font-size: 2.5rem;
+    color: #28a745;
+    margin-right: 1.5rem;
+    min-width: 2.5rem;
+    animation: checkBounce 2s ease-in-out infinite;
+}
+
+.impact-item span {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2C5F2D;
+    transition: all 0.3s ease;
+}
+
+.impact-item:hover span {
+    color: #1a3a1b;
+    transform: translateX(5px);
+}
+
+/* Closing Hadith Section */
+.closing-hadith-section {
+    background: linear-gradient(135deg, 
+        rgba(44, 95, 45, 0.8) 0%, 
+        rgba(26, 58, 27, 0.9) 100%);
+    border-radius: 25px;
+    padding: 3rem;
+    margin-top: 3rem;
+    color: white;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 1s ease-out 2.2s both;
+}
+
+.closing-hadith-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M20,20 Q50,5 80,20 T100,50 Q85,80 50,95 T0,50 Q15,20 50,5 T100,50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></svg>');
+    opacity: 0.5;
+}
+
+.closing-hadith {
+    font-size: 1.8rem;
+    font-style: italic;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    animation: textGlow 3s ease-in-out infinite;
+}
+
+.hadith-source {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+    animation: fadeIn 2s ease-in-out infinite;
+}
+
+/* Section Headings */
+.section-heading {
+    color: #2C5F2D;
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 1rem;
+}
+
+.section-heading::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #2C5F2D, #D4AF37);
+    border-radius: 2px;
+    animation: slideInRight 0.8s ease-out;
+}
+
+.section-heading i {
+    margin-right: 1rem;
+    animation: iconFloat 3s ease-in-out infinite;
+}
+
+/* Floating Particles for Background */
+.donate-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.donate-particle {
+    position: absolute;
+    background: radial-gradient(circle, 
+        rgba(212, 175, 55, 0.3) 0%, 
+        transparent 70%);
+    border-radius: 50%;
+    animation: floatParticle 20s linear infinite;
+    opacity: 0.3;
+}
+
+.sparkle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: white;
+    border-radius: 50%;
+    animation: sparkle 2s linear infinite;
+    opacity: 0;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #FF6B6B, #FFD93D, #2C5F2D);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+/* ============================================
+   EXISTING STYLES CONTINUED...
+   ============================================ */
+
+/* HEADER & NAVIGATION */
 .main-header {
     background: var(--white);
     box-shadow: var(--shadow-md);
@@ -636,258 +1552,6 @@ p {
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-}
-
-/* ============================================
-   DONATE PAGE - SPECIAL HERO
-   ============================================ */
-.donate-hero {
-    background: linear-gradient(rgba(44, 95, 45, 0.85), rgba(26, 58, 27, 0.9)), 
-                url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1600&q=80');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    padding: 6rem 0;
-    color: white;
-    position: relative;
-    overflow: hidden;
-}
-
-.donate-hero .hero-overlay {
-    background: radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(232, 73, 29, 0.1) 0%, transparent 50%);
-}
-
-.floating-icon {
-    animation: floating 3s ease-in-out infinite;
-    display: inline-block;
-}
-
-.floating-icon i {
-    font-size: 4rem;
-    color: #FFD700;
-    margin-bottom: 1rem;
-}
-
-.arabic-text {
-    font-size: 1.8rem;
-    font-family: 'Times New Roman', serif;
-    line-height: 2.2;
-    margin: 2rem 0;
-    animation: fadeInUp 1s ease-out 0.3s both;
-    text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
-    color: #FFD700;
-    font-weight: 600;
-}
-
-.english-translation {
-    font-size: 1.1rem;
-    font-style: italic;
-    margin: 0.5rem 0;
-    animation: fadeInUp 1s ease-out 0.6s both;
-    opacity: 0.95;
-}
-
-.hadith-reference {
-    font-size: 0.9rem;
-    opacity: 0.85;
-}
-
-/* ============================================
-   DONATE PAGE - CARDS & SECTIONS
-   ============================================ */
-.donation-card {
-    animation: scaleIn 0.6s ease-out;
-    border: none;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    border-radius: 20px;
-    overflow: hidden;
-    transition: all 0.4s ease;
-}
-
-.donation-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-}
-
-.card-header-custom {
-    background: linear-gradient(135deg, #2C5F2D 0%, #1a3a1b 100%);
-    color: white;
-    padding: 2rem;
-    text-align: center;
-}
-
-.card-header-custom i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    animation: heartBeat 2s ease-in-out infinite;
-}
-
-.bank-details-box {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 15px;
-    padding: 2rem;
-    margin: 2rem 0;
-    border-left: 5px solid #D4AF37;
-    animation: slideInLeft 0.8s ease-out 0.4s both;
-    transition: all 0.3s ease;
-}
-
-.bank-details-box:hover {
-    transform: scale(1.02);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-}
-
-.detail-item {
-    padding: 0.8rem 0;
-    border-bottom: 1px dashed #dee2e6;
-}
-
-.detail-item:last-child {
-    border-bottom: none;
-}
-
-.detail-label {
-    color: #2C5F2D;
-    font-weight: 700;
-    font-size: 1.1rem;
-}
-
-.detail-value {
-    color: #1a1a1a;
-    font-size: 1.15rem;
-    font-weight: 500;
-    margin-top: 0.3rem;
-}
-
-.mobile-money-card {
-    background: white;
-    border-radius: 15px;
-    padding: 1.5rem;
-    text-align: center;
-    transition: all 0.3s ease;
-    border: 2px solid #e9ecef;
-    animation: slideInRight 0.8s ease-out 0.6s both;
-}
-
-.mobile-money-card:hover {
-    transform: translateY(-5px);
-    border-color: #D4AF37;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}
-
-.mobile-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    animation: bounce 2s infinite;
-}
-
-.orange-money .mobile-icon {
-    color: #FF6600;
-}
-
-.moov-money .mobile-icon {
-    color: #00A0E3;
-}
-
-.orange-money .mobile-provider {
-    color: #FF6600;
-    font-weight: bold;
-}
-
-.moov-money .mobile-provider {
-    color: #00A0E3;
-    font-weight: bold;
-}
-
-.mobile-number {
-    font-size: 1.3rem;
-    font-weight: 600;
-}
-
-.note-box {
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-    border-left: 5px solid #ffc107;
-    border-radius: 10px;
-    padding: 1.5rem;
-    margin: 2rem 0;
-    animation: scaleIn 0.8s ease-out 1s both;
-}
-
-.note-icon {
-    font-size: 2rem;
-    color: #ff6b00;
-    animation: swing 2s ease-in-out infinite;
-}
-
-.note-title {
-    color: #856404;
-}
-
-.note-text {
-    color: #856404;
-}
-
-.contact-info-box {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 15px;
-    padding: 2rem;
-    margin-top: 2rem;
-    text-align: center;
-    animation: fadeInUp 1s ease-out 1.2s both;
-}
-
-.contact-item {
-    margin: 0.5rem 0;
-}
-
-.contact-item i {
-    font-size: 1.5rem;
-    margin-right: 0.5rem;
-}
-
-.impact-section {
-    background: linear-gradient(135deg, rgba(44, 95, 45, 0.05) 0%, rgba(212, 175, 55, 0.05) 100%);
-    border-radius: 15px;
-    padding: 2rem;
-    margin-top: 2rem;
-    animation: fadeInUp 1s ease-out 0.8s both;
-}
-
-.impact-item {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    margin: 0.5rem 0;
-    background: white;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-}
-
-.impact-item:hover {
-    transform: translateX(10px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.impact-item i {
-    font-size: 2rem;
-    color: #28a745;
-    margin-right: 1rem;
-    min-width: 2rem;
-}
-
-.closing-hadith {
-    color: #2C5F2D;
-    font-style: italic;
-}
-
-.hadith-source {
-    color: #666;
-}
-
-.section-heading {
-    color: #2C5F2D;
 }
 
 /* ============================================
@@ -2799,7 +3463,115 @@ textarea.form-control {
 }
 
 /* ============================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN - DONATION PAGE
+   ============================================ */
+@media (max-width: 768px) {
+    .donate-hero {
+        padding: 4rem 0;
+    }
+    
+    .donate-hero .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .arabic-text {
+        font-size: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .english-translation {
+        padding: 1.5rem;
+    }
+    
+    .english-translation p {
+        font-size: 1.1rem;
+    }
+    
+    .card-header-custom h2 {
+        font-size: 2rem;
+    }
+    
+    .detail-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .detail-label {
+        min-width: auto;
+        margin-bottom: 0.5rem;
+    }
+    
+    .detail-value {
+        padding-left: 1.5rem;
+    }
+    
+    .mobile-number {
+        font-size: 1.3rem;
+    }
+    
+    .impact-item {
+        padding: 1.2rem;
+    }
+    
+    .impact-item i {
+        font-size: 2rem;
+        margin-right: 1rem;
+    }
+    
+    .impact-item span {
+        font-size: 1.1rem;
+    }
+    
+    .closing-hadith {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .donate-hero {
+        padding: 3rem 0;
+    }
+    
+    .donate-hero .hero-title {
+        font-size: 2rem;
+    }
+    
+    .arabic-text {
+        font-size: 1.3rem;
+        padding: 1rem;
+    }
+    
+    .card-header-custom {
+        padding: 2rem 1rem;
+    }
+    
+    .bank-details-box {
+        padding: 1.5rem;
+    }
+    
+    .mobile-money-card {
+        padding: 1.5rem;
+    }
+    
+    .note-box {
+        padding: 1.5rem;
+    }
+    
+    .contact-info-box {
+        padding: 2rem 1.5rem;
+    }
+    
+    .impact-section {
+        padding: 2rem 1.5rem;
+    }
+    
+    .closing-hadith-section {
+        padding: 2rem 1.5rem;
+    }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - GENERAL
    ============================================ */
 @media (max-width: 768px) {
     h1 { font-size: 2rem; }
@@ -2845,10 +3617,6 @@ textarea.form-control {
     
     .auth-section {
         margin-top: -50px;
-    }
-    
-    .donate-hero {
-        padding: 4rem 0;
     }
 }
 
