@@ -15,96 +15,39 @@ $images = $stmt->fetchAll();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Gallery Hero Background */
-        .hero-gallery {
-            background: linear-gradient(rgba(44, 95, 45, 0.85), rgba(26, 58, 27, 0.9)), 
-                        url('https://images.unsplash.com/photo-1452421822248-d4c2b47f0c81?w=1920&h=600&fit=crop&q=80') center/cover !important;
-            background-size: cover !important;
-            background-position: center !important;
-            min-height: 500px;
-            position: relative;
-        }
-        
-        /* Gallery Image Hover Effect */
-        .gallery-item {
-            position: relative;
-            overflow: hidden;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-            height: 250px;
-        }
-        
-        .gallery-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        
-        .gallery-item:hover img {
-            transform: scale(1.1);
-        }
-        
-        .gallery-overlay {
-            position: absolute;
+        /* Floating decorative elements */
+        .floating-elements {
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            display: flex;
-            align-items: flex-end;
-            padding: 1rem;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
         }
         
-        .gallery-item:hover .gallery-overlay {
-            opacity: 1;
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
         }
         
-        .gallery-title {
-            color: white;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin: 0;
+        /* Prevent overflow on modal open */
+        body.modal-open {
+            overflow: hidden;
+            padding-right: 0 !important;
         }
         
-        .gallery-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 2rem;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        /* Gallery Section Background Enhancement */
+        .gallery-section-bg {
+            position: relative;
+            z-index: 1;
         }
         
-        .gallery-item:hover .gallery-icon {
-            opacity: 1;
-        }
-        
-        /* Modal Image */
-        .modal-content {
-            background: transparent;
-            border: none;
-        }
-        
-        .modal-body {
-            padding: 0;
-        }
-        
-        .modal-body img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
+        /* Ensure content is above background elements */
+        .container, .hero-content, .section {
+            position: relative;
+            z-index: 2;
         }
     </style>
 </head>
@@ -120,29 +63,34 @@ $images = $stmt->fetchAll();
             </div>
             <h1 class="hero-title">Photo Gallery</h1>
             <p class="hero-subtitle">Capturing moments of hope and compassion</p>
+            <div class="scroll-indicator">
+                <i class="bi bi-chevron-down"></i>
+            </div>
         </div>
     </section>
 
     <!-- Gallery Section -->
-    <section class="section">
+    <section class="section gallery-section-bg" id="gallery-section">
         <div class="container">
             <?php if (empty($images)): ?>
-                <div class="text-center py-5">
-                    <i class="bi bi-images" style="font-size: 5rem; color: var(--border-color);"></i>
+                <div class="text-center py-5 gallery-empty-state">
+                    <i class="bi bi-images"></i>
                     <h3 class="mt-3">No Photos Yet</h3>
                     <p class="text-muted">Check back soon to see our work in action.</p>
                 </div>
             <?php else: ?>
                 <div class="row g-4">
-                    <?php foreach ($images as $image): ?>
+                    <?php foreach ($images as $index => $image): ?>
                     <div class="col-lg-3 col-md-4 col-sm-6">
                         <div class="gallery-item" 
                              data-bs-toggle="modal" 
                              data-bs-target="#imageModal"
                              data-image="<?php echo htmlspecialchars($image['image_url']); ?>"
-                             data-title="<?php echo htmlspecialchars($image['title']); ?>">
+                             data-title="<?php echo htmlspecialchars($image['title']); ?>"
+                             data-index="<?php echo $index; ?>">
                             <img src="<?php echo htmlspecialchars($image['image_url']); ?>" 
-                                 alt="<?php echo htmlspecialchars($image['title']); ?>">
+                                 alt="<?php echo htmlspecialchars($image['title']); ?>"
+                                 loading="lazy">
                             <div class="gallery-overlay">
                                 <p class="gallery-title"><?php echo htmlspecialchars($image['title']); ?></p>
                             </div>
@@ -153,10 +101,10 @@ $images = $stmt->fetchAll();
                 </div>
                 
                 <!-- Image Count -->
-                <div class="text-center mt-4">
+                <div class="text-center mt-4 gallery-count">
                     <p class="text-muted">
                         <i class="bi bi-images"></i> 
-                        Showing <?php echo count($images); ?> photos
+                        Showing <span><?php echo count($images); ?></span> photos
                     </p>
                 </div>
             <?php endif; ?>
@@ -200,7 +148,125 @@ $images = $stmt->fetchAll();
                     modalTitle.textContent = imageTitle;
                 });
             }
+            
+            // Create floating decorative elements
+            createFloatingElements();
+            
+            // Create background particles
+            createParticles();
+            
+            // Animate gallery items on scroll
+            animateGalleryItemsOnScroll();
+            
+            // Add smooth scroll to gallery section
+            document.querySelector('.scroll-indicator').addEventListener('click', function() {
+                document.getElementById('gallery-section').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
         });
+
+        function createFloatingElements() {
+            const icons = ['✿', '❁', '★', '✦', '❖', '✵', '✷', '✸'];
+            const container = document.createElement('div');
+            container.className = 'floating-elements';
+            
+            // Create 3 floating elements
+            for (let i = 0; i < 3; i++) {
+                const element = document.createElement('div');
+                element.className = `floating-element-${i + 1}`;
+                element.innerHTML = icons[i] || icons[0];
+                element.style.cssText = `
+                    position: fixed;
+                    z-index: 1;
+                    opacity: 0.08;
+                    pointer-events: none;
+                    font-size: ${6 + i * 2}rem;
+                    color: ${i === 0 ? '#D4AF37' : i === 1 ? '#2C5F2D' : '#E8491D'};
+                    animation: floatingElements ${20 + i * 5}s ease-in-out infinite ${i % 2 ? 'reverse' : 'normal'};
+                `;
+                container.appendChild(element);
+            }
+            
+            document.body.appendChild(container);
+        }
+
+        function createParticles() {
+            const particlesContainer = document.createElement('div');
+            particlesContainer.className = 'particles';
+            
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.cssText = `
+                    width: ${Math.random() * 20 + 5}px;
+                    height: ${Math.random() * 20 + 5}px;
+                    left: ${Math.random() * 100}%;
+                    background: rgba(${i % 3 === 0 ? '212, 175, 55' : i % 3 === 1 ? '44, 95, 45' : '232, 73, 29'}, ${Math.random() * 0.05 + 0.03});
+                    animation-delay: ${Math.random() * 20}s;
+                    animation-duration: ${Math.random() * 10 + 15}s;
+                `;
+                particlesContainer.appendChild(particle);
+            }
+            
+            document.body.appendChild(particlesContainer);
+        }
+
+        function animateGalleryItemsOnScroll() {
+            const galleryItems = document.querySelectorAll('.gallery-item');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        entry.target.style.animationDelay = `${entry.target.dataset.index * 0.05}s`;
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+            
+            galleryItems.forEach((item) => {
+                observer.observe(item);
+            });
+        }
+
+        // Enhanced modal opening effect
+        const imageModal = document.getElementById('imageModal');
+        if (imageModal) {
+            imageModal.addEventListener('show.bs.modal', function() {
+                document.body.classList.add('modal-open');
+            });
+            
+            imageModal.addEventListener('hidden.bs.modal', function() {
+                document.body.classList.remove('modal-open');
+            });
+        }
+
+        // Add CSS for floating elements animation if not already present
+        if (!document.querySelector('style[data-floating-animation]')) {
+            const style = document.createElement('style');
+            style.setAttribute('data-floating-animation', '');
+            style.textContent = `
+                @keyframes floatingElements {
+                    0%, 100% {
+                        transform: translateY(0) translateX(0) rotate(0deg);
+                    }
+                    25% {
+                        transform: translateY(-40px) translateX(20px) rotate(90deg);
+                    }
+                    50% {
+                        transform: translateY(0) translateX(-20px) rotate(180deg);
+                    }
+                    75% {
+                        transform: translateY(40px) translateX(10px) rotate(270deg);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     </script>
 </body>
 </html>
