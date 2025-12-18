@@ -1113,10 +1113,7 @@ p {
 
 /* Contact Info Box */
 .contact-info-box {
-    background: linear-gradient(135deg, 
-        #a5b2ea 0%, 
-        #b4a3c5 50%, 
-        #848bac 100%);
+    
     color: white;
     border-radius: 25px;
     padding: 3rem;
