@@ -103,10 +103,7 @@ require_once 'includes/functions.php';
         }
     </style>
 </head>
-<body>
-    <!-- Floating Particles Background -->
-    
-    
+<body>  
     <?php include 'includes/header.php'; ?>
 
     <!-- Beautiful Hero Section -->
@@ -745,3 +742,5 @@ require_once 'includes/functions.php';
     </script>
 </body>
 </html>
+
+header
