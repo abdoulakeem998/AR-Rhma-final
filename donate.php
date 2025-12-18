@@ -297,7 +297,7 @@ require_once 'includes/functions.php';
                             </div>
 
                             <!-- Contact Information -->
-                            <div class="contact-info-box">
+                            <div class="contact-info-box" style="background: linear-gradient(135deg, #D4AF37 0%, #2C5F2D 50%, #D4AF37 100%) !important;">
                                 <h4 class="mb-4">
                                     <i class="bi bi-envelope-heart"></i> Contact Us for Confirmation
                                 </h4>
