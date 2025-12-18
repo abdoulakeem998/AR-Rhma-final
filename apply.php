@@ -10,12 +10,12 @@ $role = $stmt->fetch();
 
 if (!$role) {
     setFlashMessage('error', 'Role not found or closed.');
-    redirect('/ar-rahma-website/volunteer.php');
+    redirect('/AR-Rhma-final/volunteer.php');
 }
 
 if (hasApplied(getCurrentUserId(), $role_id)) {
     setFlashMessage('warning', 'You have already applied for this position.');
-    redirect('/ar-rahma-website/my_applications.php');
+    redirect('/AR-Rhma-final/my_applications.php');
 }
 
 $errors = [];
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setFlashMessage('success', 'Application submitted successfully!');
                 
                 // FIXED: Use proper redirect with exit
-                header('Location: /ar-rahma-website/my_applications.php');
+                header('Location: /AR-Rhma-final/my_applications.php');
                 exit(); // This ensures nothing else is executed after redirect
             }
         } catch (PDOException $e) {
