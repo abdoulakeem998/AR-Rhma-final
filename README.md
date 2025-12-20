@@ -1,6 +1,6 @@
 # AR-RAHMA Humanitarian Association Website
 
-**Live Demo:** [http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/index.php](http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/index.php)
+**Live Demo:** [169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/index.php](169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/index.php)
 
 ---
 
