@@ -1,6 +1,6 @@
 # AR-RAHMA Humanitarian Association Website
 
-**Live Demo:** [http://169.239.251.102/~ngoila.karimou/uploads/AR-Rhma-final/](http://169.239.251.102/~ngoila.karimou/uploads/AR-Rhma-final/)
+**Live Demo:** [http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/index.php](http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/index.php)
 
 ---
 
@@ -110,7 +110,7 @@ I designed the following tables to support the platform:
 
 5. **Access the Application**
    
-   Navigate to: `http://your-server/~ngoila.karimou/uploads/AR-Rhma-final/`
+   Navigate to: `http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/index.php`
 
 ---
 
@@ -145,7 +145,7 @@ I designed the following tables to support the platform:
 **Admin Account:**
 - UserName: `admin`
 - Password: `password`
-- Access: `http://your-server/~ngoila.karimou/uploads/AR-Rhma-final/admin/login.php`
+- Access: `http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/admin/login.php`
 
 
 
@@ -287,7 +287,7 @@ I chose these colors to reflect the organization's values:
 6. **Update Profile** - Keep your information current
 
 ### For Admins
-1. **Login** - Use admin credentials at `http://your-server/~ngoila.karimou/uploads/AR-Rhma-final/admin/login.php`
+1. **Login** - Use admin credentials at `http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/admin/login.php`
 2. **Dashboard** - View platform statistics
 3. **Manage Content** - Add/edit activities, team info, gallery
 4. **Review Applications** - Process volunteer requests
@@ -300,8 +300,8 @@ I chose these colors to reflect the organization's values:
 
 To add or update team member photos:
 
-1. Login to Admin Panel (`http://your-server/~ngoila.karimou/uploads/AR-Rhma-final/admin/login.php`)
-2. Navigate to Team Management (`http://your-server/~ngoila.karimou/uploads/AR-Rhma-final/admin/team.php`)
+1. Login to Admin Panel (`http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/admin/login.php`)
+2. Navigate to Team Management (`http://169.239.251.102:341/~ngoila.karimou/uploads/AR-Rhma-final/admin/team.php`)
 3. Edit any team member
 4. Click "Choose File" under photo field
 5. Select photo from your computer
