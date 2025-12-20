@@ -1,24 +1,20 @@
-/* ============================================
-   AR-RAHMA WEBSITE - ENHANCED STYLESHEET
-   Professional, Animated, and Beautiful Design
-   ============================================ */
+
 
 /* ============================================
    CSS VARIABLES - THEME COLORS
    ============================================ */
 :root {
     /* Primary Colors - Islamic/Humanitarian Theme */
-    --primary-color: #2C5F2D;        /* Deep Green - growth, hope */
-    --primary-dark: #1a3a1b;
+    --primary-color: #2C5F2D;        
     --primary-light: #4a8f4c;
     
     /* Secondary Colors */
-    --secondary-color: #D4AF37;      /* Gold - warmth, generosity */
+    --secondary-color: #D4AF37;      
     --secondary-dark: #b8941f;
     --secondary-light: #e6c968;
     
     /* Accent Colors */
-    --accent-color: #E8491D;         /* Warm Orange - energy, compassion */
+    --accent-color: #E8491D;         
     --accent-light: #ff6b47;
     
     /* Neutral Colors */
