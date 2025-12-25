@@ -2381,7 +2381,7 @@ p {
     left: 0;
     right: 0;
     bottom: 0;
-    color: green;
+    background: color(srgb red green blue)
 }
 
 .cta-content {
