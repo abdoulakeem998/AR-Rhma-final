@@ -2387,6 +2387,7 @@ p {
 .cta-content {
     position: relative;
     z-index: 1;
+    color: rgb(1, 56, 1);
 }
 
 .cta-title {
