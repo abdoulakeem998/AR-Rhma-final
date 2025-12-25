@@ -2381,7 +2381,7 @@ p {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at 30% 50%, rgba(8, 40, 16, 0.2) 0%, transparent 100%);
+    background: radial-gradient(circle at 30% 50%, rgba(8, 40, 16, 0.2) 0%, transparent 400%);
 }
 
 .cta-content {
