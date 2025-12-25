@@ -2760,7 +2760,7 @@ textarea.form-control {
 }
 
 .footer-section a {
-    color: rgba(255,255,255,0.8);
+    color: rgba(25, 116, 7, 0.8);
     transition: color var(--transition-fast);
 }
 
